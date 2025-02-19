@@ -106,14 +106,19 @@ const chains = {
   }
 };
 
-export async function getServerSideProps({ query }) {
+export async function getServerSideProps({ query, res }) {
   const timestamp = Date.now();
   
+  // Set cache control headers
+  res.setHeader(
+    'Cache-Control',
+    'public, s-maxage=1, stale-while-revalidate=2'
+  );
+
   return {
     props: {
       timestamp,
       initialChain: query.chain || null,
-      // Pass any query params that might be needed for deep linking
     }
   };
 }
@@ -165,7 +170,10 @@ export default function AppStore({ timestamp, initialChain }) {
         <meta name="twitter:site" content="https://x.com/ethereum" />
         <meta name="twitter:title" content="Poink App Store" />
         <meta name="twitter:description" content="Discover Web3 Apps" />
-        <meta name="twitter:player" content={`https://poink-main.vercel.app/appstore?t=${timestamp}`} />
+        <meta 
+          name="twitter:player" 
+          content={`https://poink-main.vercel.app?t=${timestamp}`}
+        />
         <meta name="twitter:player:width" content="360" />
         <meta name="twitter:player:height" content="560" />
         <meta name="twitter:image" content="/logodark.png" />

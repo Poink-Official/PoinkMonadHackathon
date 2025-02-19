@@ -166,7 +166,7 @@ export default function DynamicEmbed({ url, back }) {
   );
 }
 
-export async function getServerSideProps({ query }) {
+export async function getServerSideProps({ query, res }) {
   if (!query.url) {
     return {
       redirect: {
@@ -176,6 +176,12 @@ export async function getServerSideProps({ query }) {
     };
   }
 
+  // Set cache control headers
+  res.setHeader(
+    'Cache-Control',
+    'public, s-maxage=1, stale-while-revalidate=2'
+  );
+
   const url = decodeURIComponent(query.url);
   const back = query.back ? decodeURIComponent(query.back) : null;
   
@@ -183,6 +189,7 @@ export async function getServerSideProps({ query }) {
     props: {
       url,
       back,
+      timestamp: Date.now(),
     }
   };
 } 
