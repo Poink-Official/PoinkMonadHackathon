@@ -106,9 +106,20 @@ const chains = {
   }
 };
 
-export default function AppStore() {
-  const [selectedChain, setSelectedChain] = useState(null);
+export async function getServerSideProps({ query }) {
   const timestamp = Date.now();
+  
+  return {
+    props: {
+      timestamp,
+      initialChain: query.chain || null,
+      // Pass any query params that might be needed for deep linking
+    }
+  };
+}
+
+export default function AppStore({ timestamp, initialChain }) {
+  const [selectedChain, setSelectedChain] = useState(initialChain);
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [generatedPoink, setGeneratedPoink] = useState(null);
   const [appUrls, setAppUrls] = useState({});
