@@ -190,7 +190,10 @@ export default function AppStore({ timestamp, initialChain }) {
         />
         <meta name="twitter:player:width" content="360" />
         <meta name="twitter:player:height" content="560" />
-        <meta name="twitter:image" content="/logodark.png" />
+        <meta 
+          name="twitter:image" 
+          content="https://avatars.githubusercontent.com/u/194240984?s=200&v=4"
+        />
       </Head>
 
       <div className="container mx-auto px-4 py-6 max-w-md">

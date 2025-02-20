@@ -24,7 +24,10 @@ export default function ChainPage({ chain, timestamp }) {
         />
         <meta name="twitter:player:width" content="360" />
         <meta name="twitter:player:height" content="560" />
-        <meta name="twitter:image" content="/logodark.png" />
+        <meta 
+          name="twitter:image" 
+          content="https://avatars.githubusercontent.com/u/194240984?s=200&v=4"
+        />
       </Head>
 
       {/* Chain logo/home button - moved to bottom center */}
