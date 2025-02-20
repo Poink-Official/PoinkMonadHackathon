@@ -1,8 +1,10 @@
 import Head from 'next/head';
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
+import Link from 'next/link';
 
-export default function DynamicEmbed({ url }) {
+export default function DynamicEmbed({ url, back }) {
   const timestamp = Date.now();
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDropped, setIsDropped] = useState(false);
@@ -27,7 +29,7 @@ export default function DynamicEmbed({ url }) {
         // If mouse is very close, trigger drop animation
         if (distance < 50) {
           setIsDropped(true);
-          setTimeout(() => setIsDropped(false), 1000); // Reset after animation
+          setTimeout(() => setIsDropped(false), 1000);
           return;
         }
 
@@ -37,11 +39,10 @@ export default function DynamicEmbed({ url }) {
           mouseX - (logo.x + logo.width/2)
         );
 
-        // Move in opposite direction of mouse
         const newX = Math.max(0, Math.min(window.innerWidth - logo.width,
           logo.x + Math.cos(angle + Math.PI) * 5
         ));
-        const newY = Math.max(0, Math.min(100,  // Limit vertical movement
+        const newY = Math.max(0, Math.min(100,
           logo.y + Math.sin(angle + Math.PI) * 5
         ));
 
@@ -60,14 +61,13 @@ export default function DynamicEmbed({ url }) {
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <title>Embedded Content</title>
 
-        {/* Twitter Card Metadata */}
         <meta name="twitter:card" content="player" />
         <meta name="twitter:site" content="https://x.com/ethereum" />
         <meta name="twitter:title" content="Embedded Content" />
         <meta name="twitter:description" content="Interactive embedded content" />
         <meta 
           name="twitter:player" 
-          content={`https://poink-main.vercel.app/embed?url=${encodeURIComponent(url)}&t=${timestamp}`}
+          content={`https://poink-main.vercel.app/embed?url=${encodeURIComponent(url)}&back=${encodeURIComponent(`/appstore?t=${timestamp}`)}&t=${timestamp}`}
         />
         <meta name="twitter:player:width" content="360" />
         <meta name="twitter:player:height" content="560" />
@@ -85,6 +85,24 @@ export default function DynamicEmbed({ url }) {
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
             loading="lazy"
           />
+          
+          {/* Back Button */}
+          {back && (
+            <Link href={back}>
+              <motion.div
+                className="absolute top-4 left-4 z-50 bg-black/50 backdrop-blur-sm 
+                          rounded-full p-2 cursor-pointer hover:bg-black/70"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </motion.div>
+            </Link>
+          )}
+
+          {/* Floating Logo */}
           <div 
             ref={logoRef}
             style={{
@@ -159,10 +177,12 @@ export async function getServerSideProps({ query }) {
   }
 
   const url = decodeURIComponent(query.url);
+  const back = query.back ? decodeURIComponent(query.back) : null;
   
   return {
     props: {
       url,
+      back,
     }
   };
 } 

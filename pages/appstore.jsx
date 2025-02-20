@@ -153,7 +153,7 @@ export default function AppStore() {
                   <motion.a
                     key={app.name}
                     variants={itemVariants}
-                    href={`/embed?url=${encodeURIComponent(app.url)}`}
+                    href={`/embed?url=${encodeURIComponent(app.url)}&back=${encodeURIComponent(`/appstore?t=${timestamp}`)}`}
                     className="group flex flex-col items-center"
                   >
                     <motion.div 
