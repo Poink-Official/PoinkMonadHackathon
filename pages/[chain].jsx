@@ -20,7 +20,7 @@ export default function ChainPage({ chain, timestamp }) {
         <meta name="twitter:description" content={`Discover ${chain.charAt(0).toUpperCase() + chain.slice(1)} Web3 Apps`} />
         <meta 
           name="twitter:player" 
-          content={`https://poink-main.vercel.app/${chain}?t=${timestamp}`}
+          content={`https://app.poink.xyz/${chain}?t=${timestamp}`}
         />
         <meta name="twitter:player:width" content="360" />
         <meta name="twitter:player:height" content="560" />

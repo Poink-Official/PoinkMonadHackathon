@@ -58,20 +58,18 @@ export default function DynamicEmbed({ url, back, timestamp }) {
       <Head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <title>Embedded Content</title>
-
+        <title>Poink</title>
         <meta name="twitter:card" content="player" />
         <meta name="twitter:site" content="https://x.com/ethereum" />
-        <meta name="twitter:title" content="Embedded Content" />
-        <meta name="twitter:description" content="Interactive embedded content" />
-        <meta 
-          name="twitter:player" 
-          content={`https://poink-main.vercel.app/embed?url=${encodeURIComponent(url)}&back=${encodeURIComponent(`/appstore?t=${timestamp}`)}&t=${timestamp}`}
-        />
+        <meta name="twitter:title" content="Poink" />
+        <meta name="twitter:description" content="Discover Web3 Apps" />
+        <meta name="twitter:player" content={`https://app.poink.xyz/embed?url=${encodeURIComponent(url)}&t=${timestamp}`} />
         <meta name="twitter:player:width" content="360" />
         <meta name="twitter:player:height" content="560" />
-        <meta name="twitter:image" content="/logodark.png" />
-
+        <meta 
+          name="twitter:image" 
+          content="https://avatars.githubusercontent.com/u/194240984?s=200&v=4"
+        />
         <script src="https://cdn.tailwindcss.com" />
       </Head>
 

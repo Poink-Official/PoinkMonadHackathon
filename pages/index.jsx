@@ -186,7 +186,7 @@ export default function AppStore({ timestamp, initialChain }) {
           : 'Discover Web3 Apps'} />
         <meta 
           name="twitter:player" 
-          content={`https://poink-main.vercel.app${selectedChain ? `/${selectedChain}` : ''}?t=${timestamp}`}
+          content={`https://app.poink.xyz${selectedChain ? `/${selectedChain}` : ''}?t=${timestamp}`}
         />
         <meta name="twitter:player:width" content="360" />
         <meta name="twitter:player:height" content="560" />
