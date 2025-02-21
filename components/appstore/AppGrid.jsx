@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
+import { event } from '@/lib/analytics';
 
 export default function ResponsiveAppGrid({ chain, apps, timestamp }) {
   const [hoveredIndex, setHoveredIndex] = useState(null);
@@ -29,10 +30,27 @@ export default function ResponsiveAppGrid({ chain, apps, timestamp }) {
     return appUrls[app.name] || app.baseUrl;
   };
 
+  const handleAppClick = (app) => {
+    event({
+      action: 'open_app',
+      category: 'App Interaction',
+      label: app.name,
+      value: chain
+    });
+  };
+
   const handleCopy = async (app) => {
     if (generatedPoink) {
       try {
         await navigator.clipboard.writeText(generatedPoink);
+        
+        // Track the copy event
+        event({
+          action: 'copy_poink',
+          category: 'Link Generation',
+          label: app.name,
+        });
+        
         setCopiedStates(prev => ({ ...prev, [app.name]: true }));
         setTimeout(() => {
           setCopiedStates(prev => ({ ...prev, [app.name]: false }));
@@ -59,6 +77,49 @@ export default function ResponsiveAppGrid({ chain, apps, timestamp }) {
     }
   };
 
+  const handleAddressChange = (app, value) => {
+    // Track when user enters a token address
+    if (value && value.length > 5) {
+      event({
+        action: 'input_token_address',
+        category: 'Token Configuration',
+        label: app.name,
+      });
+    }
+    
+    const ca = value;
+    
+    setContractAddresses(prev => ({
+      ...prev,
+      [app.name]: ca
+    }));
+
+    let finalUrl;
+    
+    if (app.params?.type === 'query') {
+      finalUrl = `${app.baseUrl}?${app.params.inputParam}=${app.params.defaultInput}&${app.params.outputParam}=${ca}`;
+    } else if (app.params?.type === 'path') {
+      finalUrl = app.baseUrl + app.params.format.replace('{output}', ca);
+    }
+
+    if (finalUrl) {
+      setAppUrls(prev => ({
+        ...prev,
+        [app.name]: finalUrl
+      }));
+      
+      const embedUrl = `https://app.poink.xyz/embed?url=${encodeURIComponent(finalUrl)}&chain=${chain}&t=${timestamp}`;
+      setGeneratedPoink(embedUrl);
+      
+      // Track when a poink URL is generated
+      event({
+        action: 'generate_poink',
+        category: 'Link Generation',
+        label: app.name,
+      });
+    }
+  };
+
   return (
     <motion.div 
       variants={containerVariants}
@@ -70,12 +131,23 @@ export default function ResponsiveAppGrid({ chain, apps, timestamp }) {
         <div
           key={app.name}
           className="relative group"
-          onMouseEnter={() => setHoveredIndex(idx)}
+          onMouseEnter={() => {
+            setHoveredIndex(idx);
+            // Track tooltip view
+            if (idx !== hoveredIndex) {
+              event({
+                action: 'view_tooltip',
+                category: 'App Interaction',
+                label: app.name,
+              });
+            }
+          }}
           onMouseLeave={() => setHoveredIndex(null)}
         >
           <Link
             href={`/embed?url=${encodeURIComponent(getAppUrl(app))}&chain=${chain}&t=${timestamp}`}
             className="group flex flex-col items-center"
+            onClick={() => handleAppClick(app)}
           >
             <motion.div 
               className="relative w-14 h-14 sm:w-16 sm:h-16 mb-2 rounded-2xl overflow-hidden bg-[#25262B] border border-gray-800/50 shadow-lg transition-all duration-300 group-hover:border-gray-700"
@@ -157,32 +229,7 @@ export default function ResponsiveAppGrid({ chain, apps, timestamp }) {
                       placeholder="Token Contract Address (0x...)"
                       value={contractAddresses[app.name] || ''}
                       className="w-full bg-black/20 border border-white/10 rounded-lg px-2.5 py-1 text-[10px] text-white/90 focus:outline-none focus:border-white/20 placeholder:text-white/30"
-                      onChange={(e) => {
-                        const ca = e.target.value;
-                        
-                        setContractAddresses(prev => ({
-                          ...prev,
-                          [app.name]: ca
-                        }));
-
-                        let finalUrl;
-                        
-                        if (app.params.type === 'query') {
-                          finalUrl = `${app.baseUrl}?${app.params.inputParam}=${app.params.defaultInput}&${app.params.outputParam}=${ca}`;
-                        } else if (app.params.type === 'path') {
-                          finalUrl = app.baseUrl + app.params.format.replace('{output}', ca);
-                        }
-
-                        if (finalUrl) {
-                          setAppUrls(prev => ({
-                            ...prev,
-                            [app.name]: finalUrl
-                          }));
-                          
-                          const embedUrl = `https://app.poink.xyz/embed?url=${encodeURIComponent(finalUrl)}&chain=${chain}&t=${timestamp}`;
-                          setGeneratedPoink(embedUrl);
-                        }
-                      }}
+                      onChange={(e) => handleAddressChange(app, e.target.value)}
                     />
                     
                     <div className="relative group">

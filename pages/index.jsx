@@ -4,6 +4,8 @@ import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { event } from '@/lib/analytics';
+
 
 const chains = {
   monad: {
@@ -192,6 +194,18 @@ export default function AppStore({ timestamp, initialChain }) {
     return appUrls[app.name] || app.baseUrl;
   };
 
+  const handleChainSelect = (id) => {
+    // Track the event
+    event({
+      action: 'select_chain',
+      category: 'Navigation',
+      label: id,
+    });
+    
+    // Navigate to the chain page
+    router.push(`/${id}`);
+  };
+
   const router = useRouter();
 
   return (
@@ -274,6 +288,12 @@ export default function AppStore({ timestamp, initialChain }) {
                     key={id}
                     variants={itemVariants}
                     onClick={() => {
+                      // Track the event
+                      event({
+                        action: 'select_chain',
+                        category: 'Navigation', 
+                        label: id,
+                      });
                       router.push(`/${id}`);
                     }}
                     className="group flex flex-col items-center p-4 rounded-2xl

@@ -3,6 +3,8 @@ import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { event } from '@/lib/analytics';
+
 
 export default function DynamicEmbed({ url, back, timestamp }) {
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -53,6 +55,40 @@ export default function DynamicEmbed({ url, back, timestamp }) {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, [isDropped]);
 
+  // Add analytics tracking for app loads and session duration
+  useEffect(() => {
+    // Track when an app is loaded in the iframe
+    event({
+      action: 'load_embedded_app',
+      category: 'App Interaction',
+      label: new URL(url).hostname,
+    });
+    
+    // Track session duration
+    const startTime = Date.now();
+    
+    return () => {
+      const duration = Math.floor((Date.now() - startTime) / 1000);
+      if (duration > 5) {
+        event({
+          action: 'app_session_duration',
+          category: 'User Engagement',
+          label: new URL(url).hostname,
+          value: duration
+        });
+      }
+    };
+  }, [url]);
+
+  // Add tracking for back button clicks
+  const handleBackClick = () => {
+    event({
+      action: 'click_back_button',
+      category: 'Navigation',
+      label: new URL(url).hostname,
+    });
+  };
+
   return (
     <div className="player-container">
       <Head>
@@ -91,6 +127,7 @@ export default function DynamicEmbed({ url, back, timestamp }) {
                           rounded-full p-2 cursor-pointer hover:bg-black/70"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
+                onClick={handleBackClick}
               >
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
