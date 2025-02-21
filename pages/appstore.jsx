@@ -71,6 +71,7 @@ export default function AppStore() {
   const [generatedPoink, setGeneratedPoink] = useState(null);
   const [appUrls, setAppUrls] = useState({});
   const [contractAddresses, setContractAddresses] = useState({});
+  const [copiedStates, setCopiedStates] = useState({});
 
   const springConfig = { stiffness: 100, damping: 5 };
   const x = useMotionValue(0);
@@ -331,13 +332,41 @@ export default function AppStore() {
                                       whileHover={{ scale: 1.02 }}
                                       whileTap={{ scale: 0.98 }}
                                       className="w-full bg-gradient-to-r from-emerald-500/20 to-sky-500/20 hover:from-emerald-500/30 hover:to-sky-500/30 border border-white/10 rounded-lg py-1 px-3 text-[11px] text-white/90 font-medium transition-all shadow-lg shadow-black/20"
-                                      onClick={() => {
+                                      onClick={async () => {
                                         if (generatedPoink) {
-                                          navigator.clipboard.writeText(generatedPoink);
+                                          try {
+                                            await navigator.clipboard.writeText(generatedPoink);
+                                            // Set copied state for this specific app
+                                            setCopiedStates(prev => ({ ...prev, [app.name]: true }));
+                                            // Reset after 2 seconds
+                                            setTimeout(() => {
+                                              setCopiedStates(prev => ({ ...prev, [app.name]: false }));
+                                            }, 2000);
+                                          } catch (err) {
+                                            // Fallback for iframe context
+                                            const textarea = document.createElement('textarea');
+                                            textarea.value = generatedPoink;
+                                            textarea.style.position = 'fixed';
+                                            document.body.appendChild(textarea);
+                                            textarea.focus();
+                                            textarea.select();
+                                            try {
+                                              document.execCommand('copy');
+                                              textarea.remove();
+                                              // Set copied state for this specific app
+                                              setCopiedStates(prev => ({ ...prev, [app.name]: true }));
+                                              // Reset after 2 seconds
+                                              setTimeout(() => {
+                                                setCopiedStates(prev => ({ ...prev, [app.name]: false }));
+                                              }, 2000);
+                                            } catch (err) {
+                                              console.error('Failed to copy:', err);
+                                            }
+                                          }
                                         }
                                       }}
                                     >
-                                      {generatedPoink ? 'Copy' : 'Poink'}
+                                      {!generatedPoink ? 'Poink' : copiedStates[app.name] ? 'Copied!' : 'Copy'}
                                     </motion.button>
                                     
                                     {generatedPoink && (
