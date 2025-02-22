@@ -46,7 +46,7 @@ export default function TwitterFollowBanner() {
           News
         </span>
         <p className="text-white text-sm flex-grow pr-2">
-          Poink NFT will be live this Week! Follow Poink on X to stay updated! 🎁
+          Poink NFT will be Live this week! Follow Poink on X to stay updated! 🎁
         </p>
         <div className="flex-shrink-0">
           <Link 
