@@ -1,69 +1,216 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 
-export default function AppGrid({ chain, apps, containerVariants, itemVariants, timestamp }) {
+export default function ResponsiveAppGrid({ chain, apps, timestamp }) {
   const [hoveredIndex, setHoveredIndex] = useState(null);
+  const [contractAddresses, setContractAddresses] = useState({});
+  const [appUrls, setAppUrls] = useState({});
+  const [generatedPoink, setGeneratedPoink] = useState(null);
+  const [copiedStates, setCopiedStates] = useState({});
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    show: { opacity: 1, y: 0 }
+  };
+
+  const getAppUrl = (app) => {
+    return appUrls[app.name] || app.baseUrl;
+  };
+
+  const handleCopy = async (app) => {
+    if (generatedPoink) {
+      try {
+        await navigator.clipboard.writeText(generatedPoink);
+        setCopiedStates(prev => ({ ...prev, [app.name]: true }));
+        setTimeout(() => {
+          setCopiedStates(prev => ({ ...prev, [app.name]: false }));
+        }, 2000);
+      } catch (err) {
+        // Fallback for iframe context
+        const textarea = document.createElement('textarea');
+        textarea.value = generatedPoink;
+        textarea.style.position = 'fixed';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        try {
+          document.execCommand('copy');
+          textarea.remove();
+          setCopiedStates(prev => ({ ...prev, [app.name]: true }));
+          setTimeout(() => {
+            setCopiedStates(prev => ({ ...prev, [app.name]: false }));
+          }, 2000);
+        } catch (err) {
+          console.error('Failed to copy:', err);
+        }
+      }
+    }
+  };
 
   return (
-    <motion.div
+    <motion.div 
       variants={containerVariants}
       initial="hidden"
       animate="show"
-      className="grid grid-cols-3 gap-4"
+      className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 xs:gap-3 sm:gap-4 md:gap-6 p-4 sm:p-6 bg-[#1A1B1E] rounded-2xl border border-gray-800"
     >
       {apps.map((app, idx) => (
-        <Link 
+        <div
           key={app.name}
-          href={`/embed?url=${encodeURIComponent(app.url)}&back=${encodeURIComponent(`/appstore?t=${timestamp}`)}`}
           className="relative group"
           onMouseEnter={() => setHoveredIndex(idx)}
           onMouseLeave={() => setHoveredIndex(null)}
         >
-          <motion.div
-            className="relative w-16 h-16 mx-auto"
-            whileHover={{ scale: 1.1 }}
-            transition={{ type: "spring", stiffness: 300 }}
+          <Link
+            href={`/embed?url=${encodeURIComponent(getAppUrl(app))}&chain=${chain}&t=${timestamp}`}
+            className="group flex flex-col items-center"
           >
-            <Image
-              src={app.icon}
-              alt={app.name}
-              fill
-              className="rounded-2xl object-cover shadow-lg group-hover:scale-105 
-                       group-hover:z-30 transition duration-500"
-            />
-          </motion.div>
-          <span className="block text-white/80 text-xs text-center mt-2 group-hover:text-white">
-            {app.name}
-          </span>
+            <motion.div 
+              className="relative w-14 h-14 sm:w-16 sm:h-16 mb-2 rounded-2xl overflow-hidden bg-[#25262B] border border-gray-800/50 shadow-lg transition-all duration-300 group-hover:border-gray-700"
+              whileHover={{ 
+                y: -5,
+                scale: 1.1,
+                transition: { type: "spring", stiffness: 300 }
+              }}
+              whileTap={{ scale: 0.9 }}
+              variants={itemVariants}
+            >
+              <Image
+                src={app.icon}
+                alt={app.name}
+                fill
+                sizes="(max-width: 640px) 56px, 64px"
+                className="rounded-2xl object-cover relative z-10"
+              />
+            </motion.div>
+            <span className="text-gray-300 text-xs text-center group-hover:text-white font-medium tracking-tight truncate max-w-full px-1">
+              {app.name}
+            </span>
+          </Link>
 
-          <AnimatePresence>
-            {hoveredIndex === idx && (
+          {/* Tooltip */}
+          {hoveredIndex === idx && (
+            <motion.div
+              initial={{ opacity: 0, y: -20, scale: 0.6 }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                transition: {
+                  type: "spring",
+                  stiffness: 200,
+                  damping: 20,
+                  duration: 0.3
+                },
+              }}
+              exit={{ 
+                opacity: 0, 
+                y: -20, 
+                scale: 0.6
+              }}
+              className="absolute z-50 top-full left-1/2 -translate-x-1/2 mt-2 w-max max-w-[200px] min-w-[150px] 
+                       bg-black/40 backdrop-blur-md rounded-xl shadow-2xl border border-white/10 p-3
+                       before:absolute before:inset-0 before:rounded-xl 
+                       before:bg-gradient-to-b before:from-white/10 before:to-transparent before:opacity-50"
+            >
+              {/* Tooltip background animation */}
               <motion.div
-                initial={{ opacity: 0, y: 20, scale: 0.6 }}
+                className="absolute inset-0 rounded-xl bg-gradient-to-br from-emerald-500/5 to-sky-500/5"
                 animate={{
-                  opacity: 1,
-                  y: 0,
-                  scale: 1,
-                  transition: {
-                    type: "spring",
-                    stiffness: 260,
-                    damping: 10,
-                  },
+                  scale: [1, 1.02, 1],
+                  opacity: [0.5, 0.8, 0.5],
                 }}
-                exit={{ opacity: 0, y: 20, scale: 0.6 }}
-                className="absolute -top-16 -left-1/2 translate-x-1/2 flex text-xs flex-col 
-                         items-center justify-center rounded-md bg-black z-50 shadow-xl px-4 py-2"
-              >
-                <div className="font-bold text-white relative z-30 text-base">
-                  {app.name}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
+              
+              {/* Tooltip content */}
+              <div className="relative z-30 space-y-2 w-full">
+                <div className="text-center space-y-1">
+                  <div className="font-medium text-white/90">
+                    {app.name}
+                  </div>
+                  <div className="text-white/50 text-[10px] break-words">
+                    {app.description}
+                  </div>
                 </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </Link>
+
+                {app.params && (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      placeholder="Token Contract Address (0x...)"
+                      value={contractAddresses[app.name] || ''}
+                      className="w-full bg-black/20 border border-white/10 rounded-lg px-2.5 py-1 text-[10px] text-white/90 focus:outline-none focus:border-white/20 placeholder:text-white/30"
+                      onChange={(e) => {
+                        const ca = e.target.value;
+                        
+                        setContractAddresses(prev => ({
+                          ...prev,
+                          [app.name]: ca
+                        }));
+
+                        let finalUrl;
+                        
+                        if (app.params.type === 'query') {
+                          finalUrl = `${app.baseUrl}?${app.params.inputParam}=${app.params.defaultInput}&${app.params.outputParam}=${ca}`;
+                        } else if (app.params.type === 'path') {
+                          finalUrl = app.baseUrl + app.params.format.replace('{output}', ca);
+                        }
+
+                        if (finalUrl) {
+                          setAppUrls(prev => ({
+                            ...prev,
+                            [app.name]: finalUrl
+                          }));
+                          
+                          const embedUrl = `https://app.poink.xyz/embed?url=${encodeURIComponent(finalUrl)}&chain=${chain}&t=${timestamp}`;
+                          setGeneratedPoink(embedUrl);
+                        }
+                      }}
+                    />
+                    
+                    <div className="relative group">
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="w-full bg-gradient-to-r from-emerald-500/20 to-sky-500/20 hover:from-emerald-500/30 hover:to-sky-500/30 border border-white/10 rounded-lg py-1 px-3 text-[11px] text-white/90 font-medium transition-all shadow-lg shadow-black/20"
+                        onClick={() => handleCopy(app)}
+                      >
+                        {!generatedPoink ? 'Poink' : copiedStates[app.name] ? 'Copied!' : 'Copy'}
+                      </motion.button>
+                      
+                      {generatedPoink && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="absolute -right-1 -top-1 w-2 h-2 rounded-full 
+                                   bg-gradient-to-r from-emerald-500 to-sky-500"
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </div>
       ))}
     </motion.div>
   );
-} 
+}

@@ -1,7 +1,7 @@
 import Head from 'next/head';
 import Image from 'next/image';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
@@ -10,12 +10,6 @@ const chains = {
     name: 'Monad',
     icon: '/monad.png',
     apps: [
-      // { 
-      //   name: 'Yap on-chain', 
-      //   icon: '/yaponchain.png', 
-      //   baseUrl: 'https://yaponchain.xyz/',
-      //   description: 'Unlock liquidity for your NFTs.'
-      // },
       { 
         name: 'Break Monad', 
         icon: '/monad.png', 
@@ -26,7 +20,7 @@ const chains = {
         name: 'PurgeNad', 
         icon: '/purgenad.png', 
         baseUrl: 'https://purgednads.vercel.app/',
-        description: 'interactive game with NFT mint'
+        description: 'Interactive game with NFT mint'
       },
       { 
         name: 'NadRunner', 
@@ -35,16 +29,10 @@ const chains = {
         description: 'Endless runner game'
       },
       { 
-        name: 'YapMonad', 
-        icon: '/monad.png', 
-        baseUrl: 'https://yapmonad.xyz/',
-        description: 'yapping game with a twist'
-      },
-      { 
         name: 'GMonad', 
         icon: '/monad.png', 
         baseUrl: 'https://gmonad.club/',
-        description: 'clicker game'
+        description: 'Clicker game'
       },
       { 
         name: 'Bean Exchange', 
@@ -56,37 +44,36 @@ const chains = {
         name: 'Pancake', 
         icon: '/pancake.png', 
         baseUrl: 'https://pancakeswap.finance/?chain=monadTestnet',
-        description: 'Dex on monad'
-      }
-      ,
+        description: 'DEX on Monad'
+      },
       { 
         name: 'Encifher', 
         icon: '/encifher.jpg', 
         baseUrl: 'https://monad.encifher.io/',
         description: 'Encrypting soon.'
-      }      ,
+      },
       { 
         name: 'Nad.fun', 
         icon: '/nadfun.webp', 
         baseUrl: 'https://testnet.nad.fun',
         description: 'Social Memecoin Playground.'
-      }     ,
+      },
       { 
         name: 'Nostra', 
         icon: '/nostra.webp', 
         baseUrl: 'https://monad.nostra.finance/lend-borrow',
         description: 'Lend, borrow, swap & bridge crypto.'
-      } ,
+      },
       { 
         name: 'Monorail', 
         icon: '/monorail.png', 
         baseUrl: 'https://testnet-preview.monorail.xyz/',
         description: 'Trade anything across Monad'
-      },      
+      },
       { 
         name: 'Crystal', 
         icon: '/crystal.png', 
-        baseUrl: 'https://app.crystal.exchange/ ',
+        baseUrl: 'https://app.crystal.exchange/',
         description: 'The worlds first on-chain CEX.'
       },
       { 
@@ -95,7 +82,6 @@ const chains = {
         baseUrl: 'https://tally.so/r/w49zqo',
         description: 'List your app on Poink'
       }
-
     ]
   },
   ethereum: {
@@ -125,36 +111,7 @@ const chains = {
         }
       }
     ]
-  },
-  // solana: {
-  //   name: 'Solana',
-  //   icon: '/sol.png',
-  //   apps: [
-  //     { 
-  //       name: 'Jupiter', 
-  //       icon: '/jup.png', 
-  //       baseUrl: 'https://jup.ag/swap',
-  //       description: 'Best swap aggregator on Solana',
-  //       params: {
-  //         type: 'path',
-  //         format: '/SOL-{output}',
-  //         defaultInput: 'SOL'
-  //       }
-  //     },
-  //     { 
-  //       name: 'Raydium', 
-  //       icon: '/ray.png', 
-  //       baseUrl: 'https://raydium.io/swap',
-  //       description: 'AMM and liquidity provider',
-  //       params: {
-  //         type: 'query',
-  //         inputParam: 'inputMint',
-  //         outputParam: 'outputMint',
-  //         defaultInput: 'sol'
-  //       }
-  //     }
-  //   ]
-  // }
+  }
 };
 
 export async function getServerSideProps({ query, res, params }) {
@@ -186,6 +143,24 @@ export default function AppStore({ timestamp, initialChain }) {
   const [appUrls, setAppUrls] = useState({});
   const [contractAddresses, setContractAddresses] = useState({});
   const [copiedStates, setCopiedStates] = useState({});
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile devices
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    // Initial check
+    checkMobile();
+    
+    // Add resize listener
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
 
   const springConfig = { stiffness: 100, damping: 5 };
   const x = useMotionValue(0);
@@ -193,6 +168,7 @@ export default function AppStore({ timestamp, initialChain }) {
   const translateX = useSpring(useTransform(x, [-100, 100], [-50, 50]), springConfig);
 
   const handleMouseMove = (e) => {
+    if (isMobile) return; // Disable on mobile
     const halfWidth = e.currentTarget.offsetWidth / 2;
     x.set(e.nativeEvent.offsetX - halfWidth);
   };
@@ -202,7 +178,7 @@ export default function AppStore({ timestamp, initialChain }) {
     show: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
+        staggerChildren: 0.05
       }
     }
   };
@@ -246,7 +222,7 @@ export default function AppStore({ timestamp, initialChain }) {
         />
       </Head>
 
-      <div className="container mx-auto px-4 py-6 max-w-md">
+      <div className="container mx-auto px-3 sm:px-4 py-6 max-w-md sm:max-w-lg md:max-w-2xl">
         <AnimatePresence mode="wait">
           {!selectedChain ? (
             // Chain Selection Screen
@@ -259,7 +235,7 @@ export default function AppStore({ timestamp, initialChain }) {
             >
               {/* Logo */}
               <motion.div 
-                className="w-16 h-16 mx-auto"
+                className="w-16 h-16 sm:w-20 sm:h-20 mx-auto"
                 animate={{ 
                   scale: [1, 1.05, 1],
                   rotate: [0, 5, -5, 0]
@@ -273,11 +249,23 @@ export default function AppStore({ timestamp, initialChain }) {
                 <Image
                   src="/logodark.png"
                   alt="Poink"
-                  width={64}
-                  height={64}
+                  width={80}
+                  height={80}
                   className="rounded-full"
                 />
               </motion.div>
+
+              {/* Title */}
+              <div className="text-center">
+                <h1 className="text-3xl sm:text-4xl font-bold mb-3">
+                  <span className="bg-gradient-to-r from-emerald-400 to-sky-400 bg-clip-text text-transparent">
+                    Poink App Store
+                  </span>
+                </h1>
+                <p className="text-gray-400 text-sm sm:text-base">
+                  Discover Web3 applications across multiple blockchains
+                </p>
+              </div>
 
               {/* Chain Grid */}
               <div className="grid grid-cols-2 gap-4">
@@ -312,6 +300,7 @@ export default function AppStore({ timestamp, initialChain }) {
                         src={chain.icon}
                         alt={chain.name}
                         fill
+                        sizes="(max-width: 640px) 64px, 80px"
                         className="rounded-2xl object-cover shadow-lg"
                       />
                     </motion.div>
@@ -343,48 +332,68 @@ export default function AppStore({ timestamp, initialChain }) {
                 </motion.button>
               )}
 
-              {/* Apps Grid */}
+              {/* Chain header */}
+              {/* {selectedChain && (
+                <div className="flex flex-col items-center mb-4">
+                  <div className="relative w-16 h-16 mb-2">
+                    <Image
+                      src={chains[selectedChain].icon}
+                      alt={chains[selectedChain].name}
+                      fill
+                      className="rounded-full object-cover"
+                    />
+                  </div>
+                  <h1 className="text-xl sm:text-2xl font-bold text-white">
+                    {chains[selectedChain].name} App Hub
+                  </h1>
+                </div>
+              )} */}
+
+              {/* Apps Grid - Responsive layout */}
               <motion.div 
                 variants={containerVariants}
                 initial="hidden"
                 animate="show"
-                className="grid grid-cols-4 md:grid-cols-4 sm:grid-cols-3 gap-6 p-6 bg-[#1A1B1E] rounded-2xl border border-gray-800"
-                >
+                className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6 p-4 sm:p-6 bg-[#1A1B1E] rounded-2xl border border-gray-800"
+              >
                 {chains[selectedChain].apps.map((app, idx) => {
                   return (
                     <div
                       key={app.name}
                       className="relative group"
-                      onMouseEnter={() => setHoveredIndex(idx)}
-                      onMouseLeave={() => setHoveredIndex(null)}
+                      onMouseEnter={() => !isMobile && setHoveredIndex(idx)}
+                      onMouseLeave={() => !isMobile && setHoveredIndex(null)}
+                      onTouchStart={() => isMobile && setHoveredIndex(hoveredIndex === idx ? null : idx)}
                     >
-<Link
-  href={`/embed?url=${encodeURIComponent(getAppUrl(app))}&chain=${selectedChain}&t=${timestamp}`}
-  className="group flex flex-col items-center"
->
-  <motion.div 
-    className="relative w-16 h-16 mb-3 rounded-2xl overflow-hidden bg-[#25262B] border border-gray-800/50 shadow-lg transition-all duration-300 group-hover:border-gray-700"
-    whileHover={{ 
-      y: -5,
-      scale: 1.1,
-      transition: { type: "spring", stiffness: 300 }
-    }}
-    whileTap={{ scale: 0.9 }}
-    onMouseMove={handleMouseMove}
-  >
-    <Image
-      src={app.icon}
-      alt={app.name}
-      fill
-      className="rounded-2xl object-cover relative z-10"
-    />
-  </motion.div>
-  <span className="text-gray-300 text-xs text-center group-hover:text-white font-medium tracking-tight">
-    {app.name}
-  </span>
-</Link>
+                      <Link
+                        href={`/embed?url=${encodeURIComponent(getAppUrl(app))}&chain=${selectedChain}&t=${timestamp}`}
+                        className="group flex flex-col items-center"
+                      >
+                        <motion.div 
+                          className="relative w-14 h-14 sm:w-16 sm:h-16 mb-2 rounded-2xl overflow-hidden bg-[#25262B] border border-gray-800/50 shadow-lg transition-all duration-300 group-hover:border-gray-700"
+                          whileHover={{ 
+                            y: -5,
+                            scale: 1.1,
+                            transition: { type: "spring", stiffness: 300 }
+                          }}
+                          whileTap={{ scale: 0.9 }}
+                          onMouseMove={handleMouseMove}
+                          variants={itemVariants}
+                        >
+                          <Image
+                            src={app.icon}
+                            alt={app.name}
+                            fill
+                            sizes="(max-width: 640px) 56px, 64px"
+                            className="rounded-2xl object-cover relative z-10"
+                          />
+                        </motion.div>
+                        <span className="text-gray-300 text-xs text-center group-hover:text-white font-medium tracking-tight truncate max-w-full px-1">
+                          {app.name}
+                        </span>
+                      </Link>
 
-                      <AnimatePresence mode="popLayout">
+                      <AnimatePresence>
                         {hoveredIndex === idx && (
                           <motion.div
                             initial={{ opacity: 0, y: -20, scale: 0.6 }}
@@ -408,15 +417,15 @@ export default function AppStore({ timestamp, initialChain }) {
                                 ease: "easeOut"
                               }
                             }}
-                            style={{
+                            style={isMobile ? {} : {
                               translateX: translateX,
                               rotate: rotate,
                             }}
-                            className="absolute top-full left-[40%] -translate-x-1/2 flex text-xs flex-col 
+                            className={`absolute ${isMobile ? 'top-full left-1/2 -translate-x-1/2' : 'top-full left-[40%] -translate-x-1/2'} flex text-xs flex-col 
                                      items-center justify-center rounded-xl bg-black/40 backdrop-blur-md 
                                      z-50 shadow-2xl border border-white/10 p-3 min-w-[180px] max-w-[200px] mt-2
                                      before:absolute before:inset-0 before:rounded-xl 
-                                     before:bg-gradient-to-b before:from-white/10 before:to-transparent before:opacity-50"
+                                     before:bg-gradient-to-b before:from-white/10 before:to-transparent before:opacity-50`}
                           >
                             {/* Add subtle pulse animation to the tooltip */}
                             <motion.div
@@ -475,7 +484,7 @@ export default function AppStore({ timestamp, initialChain }) {
                                           [app.name]: finalUrl
                                         }));
                                         
-                                        const embedUrl = `https://poink-main.vercel.app/embed?url=${encodeURIComponent(finalUrl)}&chain=${selectedChain}&t=${timestamp}`;
+                                        const embedUrl = `https://app.poink.xyz/embed?url=${encodeURIComponent(finalUrl)}&chain=${selectedChain}&t=${timestamp}`;
                                         setGeneratedPoink(embedUrl);
                                       }
                                     }}
@@ -547,6 +556,57 @@ export default function AppStore({ timestamp, initialChain }) {
         </AnimatePresence>
       </div>
 
+      {/* Home button for chain pages */}
+      {/* {initialChain && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
+        >
+          <Link href="/">
+            <motion.div
+              className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden 
+                       border-2 border-white/10 hover:border-white/20 
+                       transition-all duration-300 shadow-lg backdrop-blur-sm
+                       bg-black/20"
+              whileHover={{ 
+                scale: 1.2,
+                rotate: [0, -10, 10, -10, 0],
+                transition: {
+                  rotate: {
+                    duration: 0.5,
+                    ease: "easeInOut"
+                  }
+                }
+              }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-sky-500/20"
+                animate={{
+                  background: [
+                    "radial-gradient(circle at 0% 0%, rgba(16, 185, 129, 0.2) 0%, rgba(14, 165, 233, 0.2) 100%)",
+                    "radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.2) 0%, rgba(14, 165, 233, 0.2) 100%)"
+                  ]
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  repeatType: "reverse"
+                }}
+              />
+              <Image
+                src="/logodark.png"
+                alt="Poink"
+                fill
+                sizes="(max-width: 640px) 48px, 56px"
+                className="object-cover relative z-10"
+              />
+            </motion.div>
+          </Link>
+        </motion.div>
+      )} */}
+
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
         
@@ -560,4 +620,4 @@ export default function AppStore({ timestamp, initialChain }) {
       `}</style>
     </div>
   );
-} 
+}

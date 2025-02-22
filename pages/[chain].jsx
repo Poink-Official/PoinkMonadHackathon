@@ -31,7 +31,7 @@ export default function ChainPage({ chain, timestamp }) {
       </Head>
 
       {/* Chain logo/home button - moved to bottom center */}
-      <motion.div
+      {/* <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
@@ -83,8 +83,8 @@ export default function ChainPage({ chain, timestamp }) {
               alt={chain}
               fill
               className="object-cover relative z-10"
-            />
-            <motion.div
+            /> *
+             <motion.div
               className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent"
               animate={{
                 opacity: [0, 0.5, 0]
@@ -94,10 +94,10 @@ export default function ChainPage({ chain, timestamp }) {
                 repeat: Infinity,
                 repeatType: "reverse"
               }}
-            />
+            /> 
           </motion.div>
         </Link>
-      </motion.div>
+      </motion.div> */}
 
       <AppStore initialChain={chain} timestamp={timestamp} />
 
