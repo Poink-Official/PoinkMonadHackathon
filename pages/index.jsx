@@ -331,11 +331,10 @@ export default function AppStore({ timestamp, initialChain }) {
                             style={{
                               translateX: translateX,
                               rotate: rotate,
-                              whiteSpace: "nowrap",
                             }}
                             className="absolute top-full left-[40%] -translate-x-1/2 flex text-xs flex-col 
                                      items-center justify-center rounded-xl bg-black/30 backdrop-blur-md 
-                                     z-50 shadow-2xl border border-white/5 p-3 min-w-[180px] mt-2
+                                     z-50 shadow-2xl border border-white/5 p-3 min-w-[180px] max-w-[200px] mt-2
                                      before:absolute before:inset-0 before:rounded-xl 
                                      before:bg-gradient-to-b before:from-white/5 before:to-transparent before:opacity-50"
                           >
@@ -344,7 +343,7 @@ export default function AppStore({ timestamp, initialChain }) {
                                 <div className="font-medium text-white/90">
                                   {app.name}
                                 </div>
-                                <div className="text-white/50 text-[10px]">
+                                <div className="text-white/50 text-[10px] break-words">
                                   {app.description}
                                 </div>
                               </div>
