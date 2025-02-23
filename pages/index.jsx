@@ -10,16 +10,16 @@ const chains = {
     name: 'Monad',
     icon: '/monad.png',
     apps: [
-      { 
-        name: 'NadFun', 
-        icon: '/nadfunlogo.svg', 
-        baseUrl: 'https://devnet.nad.fun/',
-        description: 'pumpfun on monad'
-      },
+      // { 
+      //   name: 'Yap on-chain', 
+      //   icon: '/yaponchain.png', 
+      //   baseUrl: 'https://yaponchain.xyz/',
+      //   description: 'Unlock liquidity for your NFTs.'
+      // },
       { 
         name: 'Break Monad', 
         icon: '/monad.png', 
-        baseUrl: 'https://devnet.nad.fun/',
+        baseUrl: 'https://www.breakmonad.com/',
         description: 'Click to send transactions. Mint an NFT representative of you trying to break devnet.'
       },
       { 
@@ -30,7 +30,7 @@ const chains = {
       },
       { 
         name: 'NadRunner', 
-        icon: '/monad.png', 
+        icon: '/nadrunner.png', 
         baseUrl: 'https://nadrunner.vercel.app/',
         description: 'Endless runner game'
       },
@@ -45,7 +45,57 @@ const chains = {
         icon: '/monad.png', 
         baseUrl: 'https://gmonad.club/',
         description: 'clicker game'
+      },
+      { 
+        name: 'Bean Exchange', 
+        icon: '/beanexchange.jpg', 
+        baseUrl: 'https://swap.bean.exchange/',
+        description: 'Gamified on-chain Spot & Perpetual DEX'
+      },
+      { 
+        name: 'Pancake', 
+        icon: '/pancake.png', 
+        baseUrl: 'https://pancakeswap.finance/?chain=monadTestnet',
+        description: 'Dex on monad'
       }
+      ,
+      { 
+        name: 'Encifher', 
+        icon: '/encifher.jpg', 
+        baseUrl: 'https://monad.encifher.io/',
+        description: 'Encrypting soon.'
+      }      ,
+      { 
+        name: 'Nad.fun', 
+        icon: '/nadfun.webp', 
+        baseUrl: 'https://testnet.nad.fun',
+        description: 'Social Memecoin Playground.'
+      }     ,
+      { 
+        name: 'Nostra', 
+        icon: '/nostra.webp', 
+        baseUrl: 'https://monad.nostra.finance/lend-borrow',
+        description: 'Lend, borrow, swap & bridge crypto.'
+      } ,
+      { 
+        name: 'Monorail', 
+        icon: '/monorail.png', 
+        baseUrl: 'https://testnet-preview.monorail.xyz/',
+        description: 'Trade anything across Monad'
+      },      
+      { 
+        name: 'Crystal', 
+        icon: '/crystal.png', 
+        baseUrl: 'https://app.crystal.exchange/ ',
+        description: 'The worlds first on-chain CEX.'
+      },
+      { 
+        name: 'Get Listed', 
+        icon: '/more.png', 
+        baseUrl: 'https://tally.so/r/w49zqo',
+        description: 'List your app on Poink'
+      }
+
     ]
   },
   ethereum: {
@@ -239,10 +289,20 @@ export default function AppStore({ timestamp, initialChain }) {
                       router.push(`/${id}`);
                     }}
                     className="group flex flex-col items-center p-4 rounded-2xl
-                             bg-white/5 hover:bg-white/10 transition-all duration-300"
+                             bg-white/5 hover:bg-white/10 transition-all duration-300
+                             border border-white/10 hover:border-white/20
+                             relative overflow-hidden"
                     whileHover={{ y: -5 }}
                     whileTap={{ scale: 0.95 }}
                   >
+                    {/* Add gradient overlay */}
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                      initial={false}
+                      animate={{ scale: [0.95, 1.05], opacity: [0, 0.1, 0] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
+                    
                     <motion.div 
                       className="relative w-16 h-16 mb-3"
                       whileHover={{ rotate: 360 }}
@@ -252,10 +312,10 @@ export default function AppStore({ timestamp, initialChain }) {
                         src={chain.icon}
                         alt={chain.name}
                         fill
-                        className="rounded-2xl object-cover"
+                        className="rounded-2xl object-cover shadow-lg"
                       />
                     </motion.div>
-                    <span className="text-white font-medium">{chain.name}</span>
+                    <span className="text-white font-medium relative z-10">{chain.name}</span>
                   </motion.button>
                 ))}
               </div>
@@ -288,8 +348,8 @@ export default function AppStore({ timestamp, initialChain }) {
                 variants={containerVariants}
                 initial="hidden"
                 animate="show"
-                className="grid grid-cols-3 gap-4"
-              >
+                className="grid grid-cols-4 md:grid-cols-4 sm:grid-cols-3 gap-6 p-6 bg-[#1A1B1E] rounded-2xl border border-gray-800"
+                >
                 {chains[selectedChain].apps.map((app, idx) => {
                   return (
                     <div
@@ -298,32 +358,31 @@ export default function AppStore({ timestamp, initialChain }) {
                       onMouseEnter={() => setHoveredIndex(idx)}
                       onMouseLeave={() => setHoveredIndex(null)}
                     >
-                      <Link
-                        href={`/embed?url=${encodeURIComponent(getAppUrl(app))}&chain=${selectedChain}&t=${timestamp}`}
-                        className="group flex flex-col items-center"
-                      >
-                        <motion.div 
-                          className="relative w-16 h-16 mb-2"
-                          whileHover={{ 
-                            y: -5,
-                            scale: 1.1,
-                            transition: { type: "spring", stiffness: 300 }
-                          }}
-                          whileTap={{ scale: 0.9 }}
-                          onMouseMove={handleMouseMove}
-                        >
-                          <Image
-                            src={app.icon}
-                            alt={app.name}
-                            fill
-                            className="rounded-2xl object-cover shadow-lg
-                                     group-hover:shadow-white/20 transition-all duration-300"
-                          />
-                        </motion.div>
-                        <span className="text-white/80 text-xs text-center group-hover:text-white">
-                          {app.name}
-                        </span>
-                      </Link>
+<Link
+  href={`/embed?url=${encodeURIComponent(getAppUrl(app))}&chain=${selectedChain}&t=${timestamp}`}
+  className="group flex flex-col items-center"
+>
+  <motion.div 
+    className="relative w-16 h-16 mb-3 rounded-2xl overflow-hidden bg-[#25262B] border border-gray-800/50 shadow-lg transition-all duration-300 group-hover:border-gray-700"
+    whileHover={{ 
+      y: -5,
+      scale: 1.1,
+      transition: { type: "spring", stiffness: 300 }
+    }}
+    whileTap={{ scale: 0.9 }}
+    onMouseMove={handleMouseMove}
+  >
+    <Image
+      src={app.icon}
+      alt={app.name}
+      fill
+      className="rounded-2xl object-cover relative z-10"
+    />
+  </motion.div>
+  <span className="text-gray-300 text-xs text-center group-hover:text-white font-medium tracking-tight">
+    {app.name}
+  </span>
+</Link>
 
                       <AnimatePresence mode="popLayout">
                         {hoveredIndex === idx && (
@@ -354,11 +413,25 @@ export default function AppStore({ timestamp, initialChain }) {
                               rotate: rotate,
                             }}
                             className="absolute top-full left-[40%] -translate-x-1/2 flex text-xs flex-col 
-                                     items-center justify-center rounded-xl bg-black/30 backdrop-blur-md 
-                                     z-50 shadow-2xl border border-white/5 p-3 min-w-[180px] max-w-[200px] mt-2
+                                     items-center justify-center rounded-xl bg-black/40 backdrop-blur-md 
+                                     z-50 shadow-2xl border border-white/10 p-3 min-w-[180px] max-w-[200px] mt-2
                                      before:absolute before:inset-0 before:rounded-xl 
-                                     before:bg-gradient-to-b before:from-white/5 before:to-transparent before:opacity-50"
+                                     before:bg-gradient-to-b before:from-white/10 before:to-transparent before:opacity-50"
                           >
+                            {/* Add subtle pulse animation to the tooltip */}
+                            <motion.div
+                              className="absolute inset-0 rounded-xl bg-gradient-to-br from-emerald-500/5 to-sky-500/5"
+                              animate={{
+                                scale: [1, 1.02, 1],
+                                opacity: [0.5, 0.8, 0.5],
+                              }}
+                              transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                                ease: "easeInOut"
+                              }}
+                            />
+                            
                             <div className="relative z-30 space-y-2 w-full">
                               <div className="text-center space-y-1">
                                 <div className="font-medium text-white/90">
