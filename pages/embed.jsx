@@ -4,8 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 
-export default function DynamicEmbed({ url, back }) {
-  const timestamp = Date.now();
+export default function DynamicEmbed({ url, back, timestamp }) {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDropped, setIsDropped] = useState(false);
   const logoRef = useRef(null);
@@ -168,28 +167,16 @@ export default function DynamicEmbed({ url, back }) {
 
 export async function getServerSideProps({ query, res }) {
   if (!query.url) {
-    return {
-      redirect: {
-        destination: '/',
-        permanent: false,
-      },
-    };
+    return { redirect: { destination: '/', permanent: false } };
   }
 
-  // Set cache control headers
-  res.setHeader(
-    'Cache-Control',
-    'public, s-maxage=1, stale-while-revalidate=2'
-  );
+  res.setHeader('Cache-Control', 'public, s-maxage=1, stale-while-revalidate=2');
 
   const url = decodeURIComponent(query.url);
-  const back = query.back ? decodeURIComponent(query.back) : `/?t=${Date.now()}`;
+  const chain = query.chain || null;
+  const back = chain ? `/${chain}?t=${Date.now()}` : `/?t=${Date.now()}`;
   
   return {
-    props: {
-      url,
-      back,
-      timestamp: Date.now(),
-    }
+    props: { url, back, timestamp: Date.now() }
   };
 } 
