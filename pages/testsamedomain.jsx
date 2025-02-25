@@ -11,7 +11,7 @@ export default function TestScroll() {
           <meta name="twitter:site" content="https://x.com/ethereum" />
           <meta name="twitter:title" content="Scroll Test" />
           <meta name="twitter:description" content="Testing iframe scroll behavior" />
-          <meta name="twitter:player" content="https://poinky-main.vercel.app/testsamedomain" />
+          <meta name="twitter:player" content="https://poink-main.vercel.app/testsamedomain" />
           <meta name="twitter:player:width" content="360" />
           <meta name="twitter:player:height" content="560" />
           <meta name="twitter:image" content="https://pbs.twimg.com/profile_images/1846897640677822470/8g6-quYE_400x400.jpg" />
