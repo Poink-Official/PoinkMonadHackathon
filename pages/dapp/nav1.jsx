@@ -11,7 +11,7 @@ export default function TestDapp({ url }) {
         <meta name="twitter:player" content={url} />
         <meta name="twitter:player:width" content="360" />
         <meta name="twitter:player:height" content="560" />
-        <meta name="twitter:image" content="https://pbs.twimg.com/profile_images/1846897640677822470/8g6-quYE_400x400.jpg" />
+        <meta name="twitter:image" content="/logodark.png" />
         
         <title>DApp Viewer</title>
       </Head>
