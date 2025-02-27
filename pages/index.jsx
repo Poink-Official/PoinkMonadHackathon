@@ -173,14 +173,20 @@ export default function AppStore({ timestamp, initialChain }) {
       <Head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <title>Poink App Store</title>
+        <title>{selectedChain 
+          ? `${selectedChain.charAt(0).toUpperCase() + selectedChain.slice(1)} Apps - Poink` 
+          : 'Poink App Store'}</title>
         <meta name="twitter:card" content="player" />
         <meta name="twitter:site" content="https://x.com/ethereum" />
-        <meta name="twitter:title" content="Poink App Store" />
-        <meta name="twitter:description" content="Discover Web3 Apps" />
+        <meta name="twitter:title" content={selectedChain 
+          ? `${selectedChain.charAt(0).toUpperCase() + selectedChain.slice(1)} Apps - Poink`
+          : 'Poink App Store'} />
+        <meta name="twitter:description" content={selectedChain 
+          ? `Discover ${selectedChain.charAt(0).toUpperCase() + selectedChain.slice(1)} Web3 Apps`
+          : 'Discover Web3 Apps'} />
         <meta 
           name="twitter:player" 
-          content={`https://poink-main.vercel.app/?t=${timestamp}`}
+          content={`https://poink-main.vercel.app${selectedChain ? `/${selectedChain}` : ''}?t=${timestamp}`}
         />
         <meta name="twitter:player:width" content="360" />
         <meta name="twitter:player:height" content="560" />

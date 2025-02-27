@@ -3,12 +3,30 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import AppStore from './index';
+import Head from 'next/head';
 
 export default function ChainPage({ chain, timestamp }) {
   const router = useRouter();
 
   return (
     <div className="relative">
+      <Head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>{`${chain.charAt(0).toUpperCase() + chain.slice(1)} Apps - Poink`}</title>
+        <meta name="twitter:card" content="player" />
+        <meta name="twitter:site" content="https://x.com/ethereum" />
+        <meta name="twitter:title" content={`${chain.charAt(0).toUpperCase() + chain.slice(1)} Apps - Poink`} />
+        <meta name="twitter:description" content={`Discover ${chain.charAt(0).toUpperCase() + chain.slice(1)} Web3 Apps`} />
+        <meta 
+          name="twitter:player" 
+          content={`https://poink-main.vercel.app/${chain}?t=${timestamp}`}
+        />
+        <meta name="twitter:player:width" content="360" />
+        <meta name="twitter:player:height" content="560" />
+        <meta name="twitter:image" content="/logodark.png" />
+      </Head>
+
       {/* Chain logo/home button - moved to bottom center */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
