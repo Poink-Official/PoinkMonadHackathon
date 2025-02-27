@@ -1,6 +1,25 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  images: {
+    domains: ['avatars.githubusercontent.com'],
+  },
+  async rewrites() {
+    return {
+      beforeFiles: [
+        // Simple chain routes
+        {
+          source: '/:chain(monad|ethereum|solana)',
+          destination: '/[chain]',
+        },
+        // Handle routes with any additional params
+        {
+          source: '/:chain(monad|ethereum|solana)/:params*',
+          destination: '/[chain]',
+        },
+      ],
+    }
+  },
   async headers() {
     return [
       {
