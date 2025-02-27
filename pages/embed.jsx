@@ -1,9 +1,58 @@
 import Head from 'next/head';
 import Image from 'next/image';
+import { useState, useEffect, useRef } from 'react';
 
 export default function DynamicEmbed({ url }) {
   const timestamp = Date.now();
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDropped, setIsDropped] = useState(false);
+  const logoRef = useRef(null);
   
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!logoRef.current || isDropped) return;
+
+      const logo = logoRef.current.getBoundingClientRect();
+      const mouseX = e.clientX;
+      const mouseY = e.clientY;
+
+      // Calculate distance between mouse and logo
+      const distance = Math.sqrt(
+        Math.pow(mouseX - (logo.x + logo.width/2), 2) +
+        Math.pow(mouseY - (logo.y + logo.height/2), 2)
+      );
+
+      // If mouse is within 100px of logo
+      if (distance < 100) {
+        // If mouse is very close, trigger drop animation
+        if (distance < 50) {
+          setIsDropped(true);
+          setTimeout(() => setIsDropped(false), 1000); // Reset after animation
+          return;
+        }
+
+        // Calculate new position to move away from mouse
+        const angle = Math.atan2(
+          mouseY - (logo.y + logo.height/2),
+          mouseX - (logo.x + logo.width/2)
+        );
+
+        // Move in opposite direction of mouse
+        const newX = Math.max(0, Math.min(window.innerWidth - logo.width,
+          logo.x + Math.cos(angle + Math.PI) * 5
+        ));
+        const newY = Math.max(0, Math.min(100,  // Limit vertical movement
+          logo.y + Math.sin(angle + Math.PI) * 5
+        ));
+
+        setPosition({ x: newX, y: newY });
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [isDropped]);
+
   return (
     <div className="player-container">
       <Head>
@@ -36,7 +85,16 @@ export default function DynamicEmbed({ url }) {
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
             loading="lazy"
           />
-          <div className="absolute top-4 right-4 z-50 opacity-80 hover:opacity-100 transition-opacity">
+          <div 
+            ref={logoRef}
+            style={{
+              transform: `translate(${position.x}px, ${position.y}px)`,
+              transition: 'transform 0.3s ease-out',
+            }}
+            className={`absolute top-4 right-4 z-50 ${
+              isDropped ? 'animate-drop' : ''
+            } opacity-80 hover:opacity-100`}
+          >
             <Image
               src="/logodark.png"
               alt="Poink"
@@ -52,6 +110,17 @@ export default function DynamicEmbed({ url }) {
         @tailwind base;
         @tailwind components;
         @tailwind utilities;
+
+        @keyframes dropAndBounce {
+          0% { transform: translateY(0); }
+          70% { transform: translateY(calc(100vh - 80px)); }
+          85% { transform: translateY(calc(100vh - 120px)); }
+          100% { transform: translateY(calc(100vh - 80px)); }
+        }
+
+        .animate-drop {
+          animation: dropAndBounce 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
         @layer base {
           :root {
@@ -80,7 +149,6 @@ export default function DynamicEmbed({ url }) {
 }
 
 export async function getServerSideProps({ query }) {
-  // If no URL is provided, redirect to an error page or home
   if (!query.url) {
     return {
       redirect: {
@@ -90,7 +158,6 @@ export async function getServerSideProps({ query }) {
     };
   }
 
-  // Decode the URL if it's encoded
   const url = decodeURIComponent(query.url);
   
   return {
