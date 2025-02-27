@@ -172,7 +172,14 @@ export async function getServerSideProps({ query, res }) {
 
   const url = decodeURIComponent(query.url);
   const chain = query.chain || null;
-  const back = chain ? `/${chain}?t=${Date.now()}` : `/?t=${Date.now()}`;
+  
+  // Handle ethglobal chains differently
+  const ethGlobalChains = ['arbitrum', 'base', 'flow'];
+  const back = chain 
+    ? ethGlobalChains.includes(chain)
+      ? `/ethglobal/${chain}?t=${Date.now()}`
+      : `/${chain}?t=${Date.now()}`
+    : `/?t=${Date.now()}`;
   
   return {
     props: { url, back, timestamp: Date.now() }

@@ -76,35 +76,35 @@ const chains = {
       }
     ]
   },
-  solana: {
-    name: 'Solana',
-    icon: '/sol.png',
-    apps: [
-      { 
-        name: 'Jupiter', 
-        icon: '/jup.png', 
-        baseUrl: 'https://jup.ag/swap',
-        description: 'Best swap aggregator on Solana',
-        params: {
-          type: 'path',
-          format: '/SOL-{output}',
-          defaultInput: 'SOL'
-        }
-      },
-      { 
-        name: 'Raydium', 
-        icon: '/ray.png', 
-        baseUrl: 'https://raydium.io/swap',
-        description: 'AMM and liquidity provider',
-        params: {
-          type: 'query',
-          inputParam: 'inputMint',
-          outputParam: 'outputMint',
-          defaultInput: 'sol'
-        }
-      }
-    ]
-  }
+  // solana: {
+  //   name: 'Solana',
+  //   icon: '/sol.png',
+  //   apps: [
+  //     { 
+  //       name: 'Jupiter', 
+  //       icon: '/jup.png', 
+  //       baseUrl: 'https://jup.ag/swap',
+  //       description: 'Best swap aggregator on Solana',
+  //       params: {
+  //         type: 'path',
+  //         format: '/SOL-{output}',
+  //         defaultInput: 'SOL'
+  //       }
+  //     },
+  //     { 
+  //       name: 'Raydium', 
+  //       icon: '/ray.png', 
+  //       baseUrl: 'https://raydium.io/swap',
+  //       description: 'AMM and liquidity provider',
+  //       params: {
+  //         type: 'query',
+  //         inputParam: 'inputMint',
+  //         outputParam: 'outputMint',
+  //         defaultInput: 'sol'
+  //       }
+  //     }
+  //   ]
+  // }
 };
 
 export async function getServerSideProps({ query, res, params }) {

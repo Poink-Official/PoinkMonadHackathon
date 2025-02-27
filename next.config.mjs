@@ -7,15 +7,24 @@ const nextConfig = {
   async rewrites() {
     return {
       beforeFiles: [
-        // Simple chain routes
+        // Original chain routes
         {
           source: '/:chain(monad|ethereum|solana)',
           destination: '/[chain]',
         },
-        // Handle routes with any additional params
+        // ETHGlobal chain routes
+        {
+          source: '/ethglobal/:chain(arbitrum|base|flow)',
+          destination: '/ethglobal',
+        },
+        // Handle params for both
         {
           source: '/:chain(monad|ethereum|solana)/:params*',
           destination: '/[chain]',
+        },
+        {
+          source: '/ethglobal/:chain(arbitrum|base|flow)/:params*',
+          destination: '/ethglobal',
         },
       ],
     }
