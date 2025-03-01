@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import Image from 'next/image';
 
 export default function DynamicEmbed({ url }) {
   const timestamp = Date.now();
@@ -27,7 +28,7 @@ export default function DynamicEmbed({ url }) {
       </Head>
 
       <div className="min-h-screen w-full p-2 sm:p-4">
-        <div className="w-full h-[calc(100vh-16px)] sm:h-screen rounded-lg overflow-hidden shadow-lg border border-gray-200">
+        <div className="relative w-full h-[calc(100vh-16px)] sm:h-screen rounded-lg overflow-hidden shadow-lg border border-gray-200">
           <iframe
             src={url}
             className="w-full h-full"
@@ -35,6 +36,15 @@ export default function DynamicEmbed({ url }) {
             sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
             loading="lazy"
           />
+          <div className="absolute top-4 right-4 z-50 opacity-80 hover:opacity-100 transition-opacity">
+            <Image
+              src="/logodark.png"
+              alt="Poink"
+              width={40}
+              height={40}
+              className="rounded-full shadow-lg"
+            />
+          </div>
         </div>
       </div>
 
