@@ -5,6 +5,48 @@ import { useState } from 'react';
 import Link from 'next/link';
 
 const chains = {
+  monad: {
+    name: 'Monad',
+    icon: '/monad.png',
+    apps: [
+      { 
+        name: 'NadFun', 
+        icon: '/nadfunlogo.svg', 
+        baseUrl: 'https://devnet.nad.fun/',
+        description: 'pumpfun on monad'
+      },
+      { 
+        name: 'Break Monad', 
+        icon: '/monad.png', 
+        baseUrl: 'https://devnet.nad.fun/',
+        description: 'Click to send transactions. Mint an NFT representative of you trying to break devnet.'
+      },
+      { 
+        name: 'PurgeNad', 
+        icon: '/purgenad.png', 
+        baseUrl: 'https://purgednads.vercel.app/',
+        description: 'interactive game with NFT mint'
+      },
+      { 
+        name: 'NadRunner', 
+        icon: '/monad.png', 
+        baseUrl: 'https://nadrunner.vercel.app/',
+        description: 'Endless runner game'
+      },
+      { 
+        name: 'YapMonad', 
+        icon: '/monad.png', 
+        baseUrl: 'https://yapmonad.xyz/',
+        description: 'yapping game with a twist'
+      },
+      { 
+        name: 'GMonad', 
+        icon: '/monad.png', 
+        baseUrl: 'https://gmonad.club/',
+        description: 'clicker game'
+      }
+    ]
+  },
   ethereum: {
     name: 'Ethereum',
     icon: '/eth.png',
