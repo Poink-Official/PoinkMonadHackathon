@@ -15,7 +15,7 @@ export default function Home() {
     },
     {
       id: 'notifications',
-      name: 'Degen Alerts',
+      name: 'Degen Alertz',
       description: 'Never miss a Solana move again ser',
       gradient: 'from-green-400 to-cyan-500',
       icon: '🔔'
