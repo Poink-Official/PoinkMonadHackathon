@@ -18,6 +18,15 @@ cookies.json
 db.sqlite
 searches/
 tweets/
+pages/testrandom.jsx
+pages/testtime.jsx
+pages/scrolltest.jsx
+pages/scrolltest2.jsx
+
+pages/testsamedomain.jsx
+pages/testsame.jsx
+
+pages/options.jsx
 
 *.gguf
 *.onnx
