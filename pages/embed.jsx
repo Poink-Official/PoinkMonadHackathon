@@ -39,7 +39,7 @@ export default function DynamicEmbed() {
         <meta name="twitter:site" content="https://x.com/ethereum" />
         <meta name="twitter:title" content="Embedded Content" />
         <meta name="twitter:description" content="Interactive embedded content" />
-        <meta name="twitter:player" content={`${currentPageUrl}&_=${timestamp}`} />
+        <meta name="twitter:player" content={`https://poink-main.vercel.app/embed?url=${encodeURIComponent(decodedUrl)}&t=${timestamp}`} />
         <meta name="twitter:player:width" content="360" />
         <meta name="twitter:player:height" content="560" />
         <meta name="twitter:image" content="https://pbs.twimg.com/profile_images/1846897640677822470/8g6-quYE_400x400.jpg" />
