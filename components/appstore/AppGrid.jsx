@@ -35,7 +35,16 @@ export default function ResponsiveAppGrid({ chain, apps, timestamp }) {
       action: 'open_app',
       category: 'App Interaction',
       label: app.name,
-      value: chain
+      value: chain,
+      properties: {
+        appName: app.name,
+        chain: chain,
+        appUrl: getAppUrl(app),
+        timestamp: new Date().toISOString(),
+        // Add any other app details you want to track
+        hasCustomParams: !!app.params,
+        appDescription: app.description
+      }
     });
   };
 

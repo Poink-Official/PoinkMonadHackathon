@@ -55,17 +55,79 @@ export default function DynamicEmbed({ url, back, timestamp }) {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, [isDropped]);
 
+  // Helper function to get app name from URL
+  const getAppNameFromUrl = (hostname) => {
+    const hostMap = {
+      // Monad apps
+      'breakmonad.com': 'Break Monad',
+      'purgednads.vercel.app': 'PurgeNad',
+      'nadrunner.vercel.app': 'NadRunner',
+      'gmonad.club': 'GMonad',
+      'swap.bean.exchange': 'Bean Exchange',
+      'pancakeswap.finance': 'Pancake',
+      'monad.encifher.io': 'Encifher',
+      'testnet.nad.fun': 'Nad.fun',
+      'monad.nostra.finance': 'Nostra',
+      'testnet-preview.monorail.xyz': 'Monorail',
+      'app.crystal.exchange': 'Crystal',
+      'velocityrush.me': 'Velocity Rush',
+      'magiceden.io': 'Magic Eden',
+      
+      // Ethereum apps
+      'app.uniswap.org': 'Uniswap',
+      'swap.cow.fi': 'CoW Swap',
+      
+      // Solana apps
+      'jup.ag': 'Jupiter',
+      'raydium.io': 'Raydium',
+      
+      // Other apps
+      'app.naviprotocol.io': 'Navi Protocol',
+      'carrot-fi.xyz': 'Carrot Finance',
+      'app.asteroneo.com': 'AsteroNeo',
+      'app.increment.fi': 'Increment Finance',
+      'tally.so': 'Get Listed'
+    };
+    
+    // Look for partial matches if an exact match isn't found
+    for (const [key, value] of Object.entries(hostMap)) {
+      if (hostname.includes(key)) {
+        return value;
+      }
+    }
+    
+    return 'Unknown App';
+  };
+
   // Add analytics tracking for app loads and session duration
   useEffect(() => {
+    const startTime = Date.now();
+    let appUrl;
+    
+    try {
+      appUrl = new URL(url);
+    } catch (e) {
+      console.error('Invalid URL:', url);
+      appUrl = { hostname: 'unknown' };
+    }
+    
+    const appName = getAppNameFromUrl(appUrl.hostname);
+    const chain = back?.includes('chain=') ? back.split('chain=')[1].split('&')[0] : 'unknown';
+    
     // Track when an app is loaded in the iframe
     event({
       action: 'load_embedded_app',
       category: 'App Interaction',
-      label: new URL(url).hostname,
+      label: appUrl.hostname,
+      properties: {
+        appUrl: url,
+        appHost: appUrl.hostname,
+        appName: appName,
+        referrer: document.referrer,
+        chain: chain,
+        timestamp: new Date().toISOString()
+      }
     });
-    
-    // Track session duration
-    const startTime = Date.now();
     
     return () => {
       const duration = Math.floor((Date.now() - startTime) / 1000);
@@ -73,19 +135,34 @@ export default function DynamicEmbed({ url, back, timestamp }) {
         event({
           action: 'app_session_duration',
           category: 'User Engagement',
-          label: new URL(url).hostname,
-          value: duration
+          label: appUrl.hostname,
+          value: duration,
+          properties: {
+            appUrl: url,
+            appHost: appUrl.hostname,
+            appName: appName,
+            durationSeconds: duration,
+            chain: chain
+          }
         });
       }
     };
-  }, [url]);
+  }, [url, back]);
 
-  // Add tracking for back button clicks
+  // Track back button clicks
   const handleBackClick = () => {
+    const appUrl = new URL(url);
+    const appName = getAppNameFromUrl(appUrl.hostname);
+    
     event({
       action: 'click_back_button',
       category: 'Navigation',
-      label: new URL(url).hostname,
+      label: appUrl.hostname,
+      properties: {
+        appName: appName,
+        fromUrl: url,
+        toUrl: back
+      }
     });
   };
 
@@ -221,4 +298,4 @@ export async function getServerSideProps({ query, res }) {
   return {
     props: { url, back, timestamp: Date.now() }
   };
-} 
+}

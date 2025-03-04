@@ -79,6 +79,18 @@ const chains = {
         description: 'The worlds first on-chain CEX.'
       },
       { 
+        name: 'Velocity Rush', 
+        icon: '/velocityrush.png', 
+        baseUrl: 'https://velocityrush.me/',
+        description: 'Auto-runner game built to push Monad to its limits.'
+      },
+      { 
+        name: 'Magic Eden', 
+        icon: '/magiceden.png', 
+        baseUrl: 'https://magiceden.io/monad-testnet',
+        description: 'Buy, sell, and collect NFTs.'
+      },
+      { 
         name: 'Get Listed', 
         icon: '/more.png', 
         baseUrl: 'https://tally.so/r/w49zqo',

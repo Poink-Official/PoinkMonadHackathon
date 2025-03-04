@@ -70,6 +70,7 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
+import { event } from '@/lib/analytics';
 
 export default function ResponsiveAppGrid({ chain, apps, timestamp }) {
   const [hoveredIndex, setHoveredIndex] = useState(null);
@@ -97,10 +98,36 @@ export default function ResponsiveAppGrid({ chain, apps, timestamp }) {
     return appUrls[app.name] || app.baseUrl;
   };
 
+  const handleAppClick = (app) => {
+    event({
+      action: 'open_app',
+      category: 'App Interaction',
+      label: app.name,
+      value: chain,
+      properties: {
+        appName: app.name,
+        chain: chain,
+        appUrl: getAppUrl(app),
+        timestamp: new Date().toISOString(),
+        // Add any other app details you want to track
+        hasCustomParams: !!app.params,
+        appDescription: app.description
+      }
+    });
+  };
+
   const handleCopy = async (app) => {
     if (generatedPoink) {
       try {
         await navigator.clipboard.writeText(generatedPoink);
+        
+        // Track the copy event
+        event({
+          action: 'copy_poink',
+          category: 'Link Generation',
+          label: app.name,
+        });
+        
         setCopiedStates(prev => ({ ...prev, [app.name]: true }));
         setTimeout(() => {
           setCopiedStates(prev => ({ ...prev, [app.name]: false }));
@@ -127,6 +154,49 @@ export default function ResponsiveAppGrid({ chain, apps, timestamp }) {
     }
   };
 
+  const handleAddressChange = (app, value) => {
+    // Track when user enters a token address
+    if (value && value.length > 5) {
+      event({
+        action: 'input_token_address',
+        category: 'Token Configuration',
+        label: app.name,
+      });
+    }
+    
+    const ca = value;
+    
+    setContractAddresses(prev => ({
+      ...prev,
+      [app.name]: ca
+    }));
+
+    let finalUrl;
+    
+    if (app.params?.type === 'query') {
+      finalUrl = `${app.baseUrl}?${app.params.inputParam}=${app.params.defaultInput}&${app.params.outputParam}=${ca}`;
+    } else if (app.params?.type === 'path') {
+      finalUrl = app.baseUrl + app.params.format.replace('{output}', ca);
+    }
+
+    if (finalUrl) {
+      setAppUrls(prev => ({
+        ...prev,
+        [app.name]: finalUrl
+      }));
+      
+      const embedUrl = `https://app.poink.xyz/embed?url=${encodeURIComponent(finalUrl)}&chain=${chain}&t=${timestamp}`;
+      setGeneratedPoink(embedUrl);
+      
+      // Track when a poink URL is generated
+      event({
+        action: 'generate_poink',
+        category: 'Link Generation',
+        label: app.name,
+      });
+    }
+  };
+
   return (
     <motion.div 
       variants={containerVariants}
@@ -138,12 +208,23 @@ export default function ResponsiveAppGrid({ chain, apps, timestamp }) {
         <div
           key={app.name}
           className="relative group"
-          onMouseEnter={() => setHoveredIndex(idx)}
+          onMouseEnter={() => {
+            setHoveredIndex(idx);
+            // Track tooltip view
+            if (idx !== hoveredIndex) {
+              event({
+                action: 'view_tooltip',
+                category: 'App Interaction',
+                label: app.name,
+              });
+            }
+          }}
           onMouseLeave={() => setHoveredIndex(null)}
         >
           <Link
             href={`/embed?url=${encodeURIComponent(getAppUrl(app))}&chain=${chain}&t=${timestamp}`}
             className="group flex flex-col items-center"
+            onClick={() => handleAppClick(app)}
           >
             <motion.div 
               className="relative w-14 h-14 sm:w-16 sm:h-16 mb-2 rounded-2xl overflow-hidden bg-[#25262B] border border-gray-800/50 shadow-lg transition-all duration-300 group-hover:border-gray-700"
@@ -225,32 +306,7 @@ export default function ResponsiveAppGrid({ chain, apps, timestamp }) {
                       placeholder="Token Contract Address (0x...)"
                       value={contractAddresses[app.name] || ''}
                       className="w-full bg-black/20 border border-white/10 rounded-lg px-2.5 py-1 text-[10px] text-white/90 focus:outline-none focus:border-white/20 placeholder:text-white/30"
-                      onChange={(e) => {
-                        const ca = e.target.value;
-                        
-                        setContractAddresses(prev => ({
-                          ...prev,
-                          [app.name]: ca
-                        }));
-
-                        let finalUrl;
-                        
-                        if (app.params.type === 'query') {
-                          finalUrl = `${app.baseUrl}?${app.params.inputParam}=${app.params.defaultInput}&${app.params.outputParam}=${ca}`;
-                        } else if (app.params.type === 'path') {
-                          finalUrl = app.baseUrl + app.params.format.replace('{output}', ca);
-                        }
-
-                        if (finalUrl) {
-                          setAppUrls(prev => ({
-                            ...prev,
-                            [app.name]: finalUrl
-                          }));
-                          
-                          const embedUrl = `https://app.poink.xyz/embed?url=${encodeURIComponent(finalUrl)}&chain=${chain}&t=${timestamp}`;
-                          setGeneratedPoink(embedUrl);
-                        }
-                      }}
+                      onChange={(e) => handleAddressChange(app, e.target.value)}
                     />
                     
                     <div className="relative group">
@@ -842,6 +898,70 @@ export default function SwapLinkGenerator({
 
 ```
 
+# lib/analytics.js
+
+```js
+// lib/analytics.js
+import { track as vercelTrack } from '@vercel/analytics';
+
+// Google Analytics Measurement ID
+export const GA_MEASUREMENT_ID = 'G-SPNHCEG4HS';
+
+// Log page views
+export const pageview = (url) => {
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('config', GA_MEASUREMENT_ID, {
+      page_path: url,
+    });
+  }
+};
+
+// Log specific events - with both GA and Vercel Analytics
+export const event = ({ action, category, label, value, properties = {} }) => {
+  // Google Analytics event tracking
+  if (typeof window !== 'undefined' && window.gtag) {
+    window.gtag('event', action, {
+      event_category: category,
+      event_label: label,
+      value: value,
+    });
+  }
+  
+  // Vercel Analytics event tracking with more detailed properties
+  vercelTrack(action, {
+    category,
+    label,
+    value,
+    ...properties,  // Additional custom properties
+  });
+};
+```
+
+# lib/useAnalytics.js
+
+```js
+import { useRouter } from 'next/router';
+import { useEffect } from 'react';
+import { pageview, event } from './analytics';
+
+export const useAnalytics = () => {
+  const router = useRouter();
+
+  useEffect(() => {
+    const handleRouteChange = (url) => {
+      pageview(url);
+    };
+
+    router.events.on('routeChangeComplete', handleRouteChange);
+    return () => {
+      router.events.off('routeChangeComplete', handleRouteChange);
+    };
+  }, [router.events]);
+
+  return { trackEvent: event };
+};
+```
+
 # next.config.mjs
 
 ```mjs
@@ -924,7 +1044,9 @@ export default nextConfig;
     "lint": "next lint"
   },
   "dependencies": {
+    "@next/third-parties": "^15.2.1",
     "@privy-io/react-auth": "^2.6.2",
+    "@vercel/analytics": "^1.5.0",
     "framer-motion": "^11.16.4",
     "next": "15.0.3",
     "react": "18",
@@ -941,12 +1063,66 @@ export default nextConfig;
 # pages/_app.js
 
 ```js
-import "@/styles/globals.css";
+import "@/styles/globals.css"; 
+import { useRouter } from 'next/router'; 
+import { useEffect } from 'react'; 
+import { pageview } from '@/lib/analytics'; 
+import { GoogleAnalytics } from '@next/third-parties/google'; 
+import { GA_MEASUREMENT_ID } from '@/lib/analytics';
+import { Analytics } from '@vercel/analytics/react';
 
 export default function App({ Component, pageProps }) {
-  return <Component {...pageProps} />;
-}
+  const router = useRouter();
+  
+  useEffect(() => {
+    // Debug log to verify initialization
+    console.log('Analytics initialized with ID:', GA_MEASUREMENT_ID);
+    
+    // Track initial page load
+    if (typeof window !== 'undefined') {
+      console.log('Initial page view tracked:', window.location.pathname + window.location.search);
+      pageview(window.location.pathname + window.location.search);
+    }
+    
+    // Track page views when the route changes
+    const handleRouteChange = (url) => {
+      console.log('Page view tracked on route change:', url);
+      pageview(url);
+    };
 
+    router.events.on('routeChangeComplete', handleRouteChange);
+    
+    return () => {
+      router.events.off('routeChangeComplete', handleRouteChange);
+    };
+  }, [router.events]);
+  
+  // Debug log for window.gtag availability
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setTimeout(() => {
+        console.log('gtag available:', typeof window.gtag === 'function');
+        
+        // Test event
+        if (typeof window.gtag === 'function') {
+          window.gtag('event', 'debug_init', {
+            'event_category': 'debugging',
+            'event_label': 'App Initialization'
+          });
+          console.log('Test event sent to GA');
+        }
+      }, 2000); // Check after 2 seconds to allow for script loading
+    }
+  }, []);
+  
+  return (
+    <>
+      <Component {...pageProps} />
+      <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />
+      <Analytics />
+    </>
+  );
+}
 ```
 
 # pages/_document.js
@@ -2003,6 +2179,8 @@ import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { event } from '@/lib/analytics';
+
 
 export default function DynamicEmbed({ url, back, timestamp }) {
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -2053,6 +2231,117 @@ export default function DynamicEmbed({ url, back, timestamp }) {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, [isDropped]);
 
+  // Helper function to get app name from URL
+  const getAppNameFromUrl = (hostname) => {
+    const hostMap = {
+      // Monad apps
+      'breakmonad.com': 'Break Monad',
+      'purgednads.vercel.app': 'PurgeNad',
+      'nadrunner.vercel.app': 'NadRunner',
+      'gmonad.club': 'GMonad',
+      'swap.bean.exchange': 'Bean Exchange',
+      'pancakeswap.finance': 'Pancake',
+      'monad.encifher.io': 'Encifher',
+      'testnet.nad.fun': 'Nad.fun',
+      'monad.nostra.finance': 'Nostra',
+      'testnet-preview.monorail.xyz': 'Monorail',
+      'app.crystal.exchange': 'Crystal',
+      'velocityrush.me': 'Velocity Rush',
+      'magiceden.io': 'Magic Eden',
+      
+      // Ethereum apps
+      'app.uniswap.org': 'Uniswap',
+      'swap.cow.fi': 'CoW Swap',
+      
+      // Solana apps
+      'jup.ag': 'Jupiter',
+      'raydium.io': 'Raydium',
+      
+      // Other apps
+      'app.naviprotocol.io': 'Navi Protocol',
+      'carrot-fi.xyz': 'Carrot Finance',
+      'app.asteroneo.com': 'AsteroNeo',
+      'app.increment.fi': 'Increment Finance',
+      'tally.so': 'Get Listed'
+    };
+    
+    // Look for partial matches if an exact match isn't found
+    for (const [key, value] of Object.entries(hostMap)) {
+      if (hostname.includes(key)) {
+        return value;
+      }
+    }
+    
+    return 'Unknown App';
+  };
+
+  // Add analytics tracking for app loads and session duration
+  useEffect(() => {
+    const startTime = Date.now();
+    let appUrl;
+    
+    try {
+      appUrl = new URL(url);
+    } catch (e) {
+      console.error('Invalid URL:', url);
+      appUrl = { hostname: 'unknown' };
+    }
+    
+    const appName = getAppNameFromUrl(appUrl.hostname);
+    const chain = back?.includes('chain=') ? back.split('chain=')[1].split('&')[0] : 'unknown';
+    
+    // Track when an app is loaded in the iframe
+    event({
+      action: 'load_embedded_app',
+      category: 'App Interaction',
+      label: appUrl.hostname,
+      properties: {
+        appUrl: url,
+        appHost: appUrl.hostname,
+        appName: appName,
+        referrer: document.referrer,
+        chain: chain,
+        timestamp: new Date().toISOString()
+      }
+    });
+    
+    return () => {
+      const duration = Math.floor((Date.now() - startTime) / 1000);
+      if (duration > 5) {
+        event({
+          action: 'app_session_duration',
+          category: 'User Engagement',
+          label: appUrl.hostname,
+          value: duration,
+          properties: {
+            appUrl: url,
+            appHost: appUrl.hostname,
+            appName: appName,
+            durationSeconds: duration,
+            chain: chain
+          }
+        });
+      }
+    };
+  }, [url, back]);
+
+  // Track back button clicks
+  const handleBackClick = () => {
+    const appUrl = new URL(url);
+    const appName = getAppNameFromUrl(appUrl.hostname);
+    
+    event({
+      action: 'click_back_button',
+      category: 'Navigation',
+      label: appUrl.hostname,
+      properties: {
+        appName: appName,
+        fromUrl: url,
+        toUrl: back
+      }
+    });
+  };
+
   return (
     <div className="player-container">
       <Head>
@@ -2091,6 +2380,7 @@ export default function DynamicEmbed({ url, back, timestamp }) {
                           rounded-full p-2 cursor-pointer hover:bg-black/70"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
+                onClick={handleBackClick}
               >
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -2184,7 +2474,7 @@ export async function getServerSideProps({ query, res }) {
   return {
     props: { url, back, timestamp: Date.now() }
   };
-} 
+}
 ```
 
 # pages/ethglobal/[chain].jsx
@@ -2930,6 +3220,8 @@ import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { event } from '@/lib/analytics';
+
 
 const chains = {
   monad: {
@@ -3001,6 +3293,18 @@ const chains = {
         icon: '/crystal.png', 
         baseUrl: 'https://app.crystal.exchange/',
         description: 'The worlds first on-chain CEX.'
+      },
+      { 
+        name: 'Velocity Rush', 
+        icon: '/velocityrush.png', 
+        baseUrl: 'https://velocityrush.me/',
+        description: 'Auto-runner game built to push Monad to its limits.'
+      },
+      { 
+        name: 'Magic Eden', 
+        icon: '/magiceden.png', 
+        baseUrl: 'https://magiceden.io/monad-testnet',
+        description: 'Buy, sell, and collect NFTs.'
       },
       { 
         name: 'Get Listed', 
@@ -3118,6 +3422,18 @@ export default function AppStore({ timestamp, initialChain }) {
     return appUrls[app.name] || app.baseUrl;
   };
 
+  const handleChainSelect = (id) => {
+    // Track the event
+    event({
+      action: 'select_chain',
+      category: 'Navigation',
+      label: id,
+    });
+    
+    // Navigate to the chain page
+    router.push(`/${id}`);
+  };
+
   const router = useRouter();
 
   return (
@@ -3200,6 +3516,12 @@ export default function AppStore({ timestamp, initialChain }) {
                     key={id}
                     variants={itemVariants}
                     onClick={() => {
+                      // Track the event
+                      event({
+                        action: 'select_chain',
+                        category: 'Navigation', 
+                        label: id,
+                      });
                       router.push(`/${id}`);
                     }}
                     className="group flex flex-col items-center p-4 rounded-2xl
@@ -4348,6 +4670,10 @@ This is a binary file of the type: Image
 
 This is a binary file of the type: Image
 
+# public/magiceden.png
+
+This is a binary file of the type: Image
+
 # public/manifest.json
 
 ```json
@@ -4437,6 +4763,10 @@ This is a binary file of the type: Image
 This is a binary file of the type: Image
 
 # public/unichain.png
+
+This is a binary file of the type: Image
+
+# public/velocityrush.png
 
 This is a binary file of the type: Image
 
