@@ -90,7 +90,7 @@ export default function DynamicEmbed({ url, back }) {
           {back && (
             <Link href={back}>
               <motion.div
-                className="absolute top-4 left-4 z-50 bg-black/50 backdrop-blur-sm 
+                className="absolute bottom-4 left-4 z-50 bg-black/50 backdrop-blur-sm 
                           rounded-full p-2 cursor-pointer hover:bg-black/70"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
