@@ -183,7 +183,7 @@ export async function getServerSideProps({ query, res }) {
   );
 
   const url = decodeURIComponent(query.url);
-  const back = query.back ? decodeURIComponent(query.back) : null;
+  const back = query.back ? decodeURIComponent(query.back) : `/?t=${Date.now()}`;
   
   return {
     props: {

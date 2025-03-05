@@ -172,7 +172,7 @@ export default function AppStore({ timestamp, initialChain }) {
         <meta name="twitter:description" content="Discover Web3 Apps" />
         <meta 
           name="twitter:player" 
-          content={`https://poink-main.vercel.app?t=${timestamp}`}
+          content={`https://poink-main.vercel.app/?t=${timestamp}`}
         />
         <meta name="twitter:player:width" content="360" />
         <meta name="twitter:player:height" content="560" />
@@ -278,7 +278,7 @@ export default function AppStore({ timestamp, initialChain }) {
                       onMouseLeave={() => setHoveredIndex(null)}
                     >
                       <Link
-                        href={`/embed?url=${encodeURIComponent(getAppUrl(app))}&back=${encodeURIComponent(`/appstore?t=${timestamp}`)}`}
+                        href={`/embed?url=${encodeURIComponent(getAppUrl(app))}&back=${encodeURIComponent(`/?t=${timestamp}`)}`}
                         className="group flex flex-col items-center"
                       >
                         <motion.div 
@@ -382,7 +382,7 @@ export default function AppStore({ timestamp, initialChain }) {
                                           [app.name]: finalUrl
                                         }));
                                         
-                                        const embedUrl = `https://poink-main.vercel.app/embed?url=${encodeURIComponent(finalUrl)}&back=${encodeURIComponent(`/appstore?t=${timestamp}`)}`;
+                                        const embedUrl = `https://poink-main.vercel.app/embed?url=${encodeURIComponent(finalUrl)}&back=${encodeURIComponent(`/?t=${timestamp}`)}`;
                                         setGeneratedPoink(embedUrl);
                                       }
                                     }}
