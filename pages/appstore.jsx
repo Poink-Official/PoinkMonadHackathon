@@ -1,32 +1,86 @@
 import Head from 'next/head';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { useState } from 'react';
+import Link from 'next/link';
 
 const chains = {
   ethereum: {
     name: 'Ethereum',
     icon: '/eth.png',
     apps: [
-      { name: 'Uniswap', icon: '/uni.png', url: 'https://app.uniswap.org/' },
-      { name: 'CoW Swap', icon: '/cow.png', url: 'https://swap.cow.fi/' }
+      { 
+        name: 'Uniswap', 
+        icon: '/uni.png', 
+        baseUrl: 'https://app.uniswap.org/#/swap',
+        description: 'Decentralized trading protocol',
+        params: {
+          type: 'query',
+          inputParam: 'inputCurrency',
+          outputParam: 'outputCurrency',
+          defaultInput: 'ETH'
+        }
+      },
+      { 
+        name: 'CoW Swap', 
+        icon: '/cow.png', 
+        baseUrl: 'https://swap.cow.fi',
+        description: 'MEV-protected DEX aggregator',
+        params: {
+          type: 'path',
+          format: '/#/1/swap/ETH/{output}'
+        }
+      }
     ]
   },
   solana: {
     name: 'Solana',
     icon: '/sol.png',
     apps: [
-      { name: 'Jupiter', icon: '/jup.png', url: 'https://jup.ag/swap' },
-      { name: 'Raydium', icon: '/ray.png', url: 'https://raydium.io/swap/' }
+      { 
+        name: 'Jupiter', 
+        icon: '/jup.png', 
+        baseUrl: 'https://jup.ag/swap',
+        description: 'Best swap aggregator on Solana',
+        params: {
+          type: 'path',
+          format: '/SOL-{output}',
+          defaultInput: 'SOL'
+        }
+      },
+      { 
+        name: 'Raydium', 
+        icon: '/ray.png', 
+        baseUrl: 'https://raydium.io/swap',
+        description: 'AMM and liquidity provider',
+        params: {
+          type: 'query',
+          inputParam: 'inputMint',
+          outputParam: 'outputMint',
+          defaultInput: 'sol'
+        }
+      }
     ]
   }
 };
 
-const MotionImage = motion(Image);
-
 export default function AppStore() {
   const [selectedChain, setSelectedChain] = useState(null);
   const timestamp = Date.now();
+  const [hoveredIndex, setHoveredIndex] = useState(null);
+  const [generatedPoink, setGeneratedPoink] = useState(null);
+  const [appUrls, setAppUrls] = useState({});
+  const [contractAddresses, setContractAddresses] = useState({});
+
+  const springConfig = { stiffness: 100, damping: 5 };
+  const x = useMotionValue(0);
+  const rotate = useSpring(useTransform(x, [-100, 100], [-45, 45]), springConfig);
+  const translateX = useSpring(useTransform(x, [-100, 100], [-50, 50]), springConfig);
+
+  const handleMouseMove = (e) => {
+    const halfWidth = e.currentTarget.offsetWidth / 2;
+    x.set(e.nativeEvent.offsetX - halfWidth);
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -41,6 +95,10 @@ export default function AppStore() {
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0 }
+  };
+
+  const getAppUrl = (app) => {
+    return appUrls[app.name] || app.baseUrl;
   };
 
   return (
@@ -149,35 +207,157 @@ export default function AppStore() {
                 animate="show"
                 className="grid grid-cols-3 gap-4"
               >
-                {chains[selectedChain].apps.map((app, index) => (
-                  <motion.a
-                    key={app.name}
-                    variants={itemVariants}
-                    href={`/embed?url=${encodeURIComponent(app.url)}&back=${encodeURIComponent(`/appstore?t=${timestamp}`)}`}
-                    className="group flex flex-col items-center"
-                  >
-                    <motion.div 
-                      className="relative w-16 h-16 mb-2"
-                      whileHover={{ 
-                        y: -5,
-                        scale: 1.1,
-                        transition: { type: "spring", stiffness: 300 }
-                      }}
-                      whileTap={{ scale: 0.9 }}
+                {chains[selectedChain].apps.map((app, idx) => {
+                  return (
+                    <div
+                      key={app.name}
+                      className="relative group"
+                      onMouseEnter={() => setHoveredIndex(idx)}
+                      onMouseLeave={() => setHoveredIndex(null)}
                     >
-                      <Image
-                        src={app.icon}
-                        alt={app.name}
-                        fill
-                        className="rounded-2xl object-cover shadow-lg
-                                 group-hover:shadow-white/20 transition-all duration-300"
-                      />
-                    </motion.div>
-                    <span className="text-white/80 text-sm text-center group-hover:text-white">
-                      {app.name}
-                    </span>
-                  </motion.a>
-                ))}
+                      <Link
+                        href={`/embed?url=${encodeURIComponent(getAppUrl(app))}&back=${encodeURIComponent(`/appstore?t=${timestamp}`)}`}
+                        className="group flex flex-col items-center"
+                      >
+                        <motion.div 
+                          className="relative w-16 h-16 mb-2"
+                          whileHover={{ 
+                            y: -5,
+                            scale: 1.1,
+                            transition: { type: "spring", stiffness: 300 }
+                          }}
+                          whileTap={{ scale: 0.9 }}
+                          onMouseMove={handleMouseMove}
+                        >
+                          <Image
+                            src={app.icon}
+                            alt={app.name}
+                            fill
+                            className="rounded-2xl object-cover shadow-lg
+                                     group-hover:shadow-white/20 transition-all duration-300"
+                          />
+                        </motion.div>
+                        <span className="text-white/80 text-xs text-center group-hover:text-white">
+                          {app.name}
+                        </span>
+                      </Link>
+
+                      <AnimatePresence mode="popLayout">
+                        {hoveredIndex === idx && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -20, scale: 0.6 }}
+                            animate={{
+                              opacity: 1,
+                              y: 0,
+                              scale: 1,
+                              transition: {
+                                type: "spring",
+                                stiffness: 200,
+                                damping: 20,
+                                duration: 0.3
+                              },
+                            }}
+                            exit={{ 
+                              opacity: 0, 
+                              y: -20, 
+                              scale: 0.6,
+                              transition: {
+                                duration: 0.2,
+                                ease: "easeOut"
+                              }
+                            }}
+                            style={{
+                              translateX: translateX,
+                              rotate: rotate,
+                              whiteSpace: "nowrap",
+                            }}
+                            className="absolute top-full left-[40%] -translate-x-1/2 flex text-xs flex-col 
+                                     items-center justify-center rounded-xl bg-black/30 backdrop-blur-md 
+                                     z-50 shadow-2xl border border-white/5 p-3 min-w-[180px] mt-2
+                                     before:absolute before:inset-0 before:rounded-xl 
+                                     before:bg-gradient-to-b before:from-white/5 before:to-transparent before:opacity-50"
+                          >
+                            <div className="relative z-30 space-y-2 w-full">
+                              <div className="text-center space-y-1">
+                                <div className="font-medium text-white/90">
+                                  {app.name}
+                                </div>
+                                <div className="text-white/50 text-[10px]">
+                                  {app.description}
+                                </div>
+                              </div>
+
+                              {app.params && (
+                                <div className="space-y-2">
+                                  <input
+                                    type="text"
+                                    placeholder="Token Contract Address (0x...)"
+                                    value={contractAddresses[app.name] || ''}
+                                    className="w-full bg-black/20 border border-white/10 rounded-lg px-2.5 py-1 text-[10px] text-white/90 focus:outline-none focus:border-white/20 placeholder:text-white/30"
+                                    onChange={(e) => {
+                                      const ca = e.target.value;
+                                      
+                                      setContractAddresses(prev => ({
+                                        ...prev,
+                                        [app.name]: ca
+                                      }));
+
+                                      let finalUrl;
+                                      
+                                      if (app.params.type === 'query') {
+                                        finalUrl = `${app.baseUrl}?${app.params.inputParam}=${app.params.defaultInput}&${app.params.outputParam}=${ca}`;
+                                      } else if (app.params.type === 'path') {
+                                        if (app.name === 'Jupiter') {
+                                          finalUrl = app.baseUrl + app.params.format.replace('{output}', ca);
+                                        } else {
+                                          finalUrl = app.baseUrl + app.params.format.replace('{output}', ca);
+                                        }
+                                      }
+
+                                      if (finalUrl) {
+                                        setAppUrls(prev => ({
+                                          ...prev,
+                                          [app.name]: finalUrl
+                                        }));
+                                        
+                                        const embedUrl = `https://poink-main.vercel.app/embed?url=${encodeURIComponent(finalUrl)}&back=${encodeURIComponent(`/appstore?t=${timestamp}`)}`;
+                                        setGeneratedPoink(embedUrl);
+                                      }
+                                    }}
+                                  />
+                                  
+                                  <div className="relative group">
+                                    <motion.button
+                                      whileHover={{ scale: 1.02 }}
+                                      whileTap={{ scale: 0.98 }}
+                                      className="w-full bg-gradient-to-r from-emerald-500/20 to-sky-500/20 hover:from-emerald-500/30 hover:to-sky-500/30 border border-white/10 rounded-lg py-1 px-3 text-[11px] text-white/90 font-medium transition-all shadow-lg shadow-black/20"
+                                      onClick={() => {
+                                        if (generatedPoink) {
+                                          navigator.clipboard.writeText(generatedPoink);
+                                        }
+                                      }}
+                                    >
+                                      {generatedPoink ? 'Copy' : 'Poink'}
+                                    </motion.button>
+                                    
+                                    {generatedPoink && (
+                                      <motion.div
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        className="absolute -right-1 -top-1 w-2 h-2 rounded-full 
+                                                 bg-gradient-to-r from-emerald-500 to-sky-500"
+                                      />
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
               </motion.div>
             </motion.div>
           )}
