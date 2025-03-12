@@ -5,6 +5,7 @@ import { pageview } from '@/lib/analytics';
 import { GoogleAnalytics } from '@next/third-parties/google'; 
 import { GA_MEASUREMENT_ID } from '@/lib/analytics';
 import { Analytics } from '@vercel/analytics/react';
+import { PrivyProvider } from "@privy-io/react-auth";
 import TwitterFollowBanner from '../components/TwitterFollowBanner';
 
 export default function App({ Component, pageProps }) {
@@ -53,10 +54,26 @@ export default function App({ Component, pageProps }) {
   
   return (
     <>
+     <PrivyProvider
+      appId={process.env.NEXT_PUBLIC_APP_ID}
+      config={{
+        // Customize Privy's appearance in your app
+        appearance: {
+          theme: 'light',
+          accentColor: '#676FFF',
+          logo: 'https://app.poink.xyz/logodark.png',
+        },
+        // Create embedded wallets for users who don't have a wallet
+        embeddedWallets: {
+          createOnLogin: 'users-without-wallets',
+        },
+      }}
+    >
           <TwitterFollowBanner />
       <Component {...pageProps} />
       <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />
       <Analytics />
+      </PrivyProvider>
     </>
   );
 }
