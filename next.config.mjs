@@ -36,7 +36,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; frame-src *; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: http:;"
+            value: "default-src 'self'; frame-src *; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://auth.privy.io; connect-src 'self' https://auth.privy.io https://*.privy.io; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: http:;"
           },
           {
             key: 'Access-Control-Allow-Origin',

@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { event } from '@/lib/analytics';
+import { usePrivy, useWallets, useLogout } from '@privy-io/react-auth';
 
 
 const chains = {
@@ -151,6 +152,18 @@ export async function getServerSideProps({ query, res, params }) {
 }
 
 export default function AppStore({ timestamp, initialChain }) {
+  const { login, authenticated, ready } = usePrivy();
+  const { logout } = useLogout({
+    onSuccess: () => {
+      // Optional: Add any logout success handling
+      event({
+        action: 'logout',
+        category: 'Authentication',
+        label: 'success',
+      });
+    }
+  });
+  const { wallets } = useWallets();
   const [selectedChain, setSelectedChain] = useState(initialChain);
   const [hoveredIndex, setHoveredIndex] = useState(null);
   const [generatedPoink, setGeneratedPoink] = useState(null);
@@ -158,6 +171,7 @@ export default function AppStore({ timestamp, initialChain }) {
   const [contractAddresses, setContractAddresses] = useState({});
   const [copiedStates, setCopiedStates] = useState({});
   const [isMobile, setIsMobile] = useState(false);
+  const [showAppStore, setShowAppStore] = useState(false);
 
   // Detect mobile devices
   useEffect(() => {
@@ -220,8 +234,140 @@ export default function AppStore({ timestamp, initialChain }) {
 
   const router = useRouter();
 
+  // Get the most recent wallet
+  const activeWallet = wallets?.[0];
+  
+  // Format wallet address
+  const formatAddress = (address) => {
+    if (!address) return '';
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  // Show app store if authenticated or if user chose to skip
+  if (!authenticated && !showAppStore) {
+    return (
+      <div className="bg-black min-h-screen">
+        <Head>
+          <meta charSet="utf-8" />
+          <meta name="viewport" content="width=device-width,initial-scale=1" />
+          <title>{selectedChain 
+            ? `${selectedChain.charAt(0).toUpperCase() + selectedChain.slice(1)} Apps - Poink` 
+            : 'Poink App Store'}</title>
+          <meta name="twitter:card" content="player" />
+          <meta name="twitter:site" content="https://x.com/ethereum" />
+          <meta name="twitter:title" content={selectedChain 
+            ? `${selectedChain.charAt(0).toUpperCase() + selectedChain.slice(1)} Apps - Poink`
+            : 'Poink App Store'} />
+          <meta name="twitter:description" content={selectedChain 
+            ? `Discover ${selectedChain.charAt(0).toUpperCase() + selectedChain.slice(1)} Web3 Apps`
+            : 'Discover Web3 Apps'} />
+          <meta 
+            name="twitter:player" 
+            content={`https://app.poink.xyz${selectedChain ? `/${selectedChain}` : ''}?t=${timestamp}`}
+          />
+          <meta name="twitter:player:width" content="360" />
+          <meta name="twitter:player:height" content="560" />
+          <meta 
+            name="twitter:image" 
+            content="https://avatars.githubusercontent.com/u/194240984?s=200&v=4"
+          />
+        </Head>
+
+        <div className="container mx-auto px-3 sm:px-4 py-6 max-w-md sm:max-w-lg md:max-w-2xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="space-y-8 text-center"
+          >
+            {/* Logo */}
+            <motion.div 
+              className="w-24 h-24 sm:w-32 sm:h-32 mx-auto"
+              animate={{ 
+                scale: [1, 1.05, 1],
+                rotate: [0, 5, -5, 0]
+              }}
+              transition={{ 
+                duration: 4,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              <Image
+                src="/logodark.png"
+                alt="Poink"
+                width={128}
+                height={128}
+                className="rounded-full"
+              />
+            </motion.div>
+
+            {/* Welcome Text */}
+            <div className="space-y-3">
+              <h1 className="text-4xl sm:text-5xl font-bold">
+                <span className="bg-gradient-to-r from-emerald-400 to-sky-400 bg-clip-text text-transparent">
+                  Welcome to Poink
+                </span>
+              </h1>
+              <p className="text-gray-400 text-sm sm:text-base max-w-md mx-auto">
+                Your gateway to discovering Web3 applications across multiple blockchains
+              </p>
+            </div>
+
+            {/* Login/Skip Buttons */}
+            <div className="space-y-4">
+              <motion.button
+                onClick={() => {
+                  login();
+                  event({
+                    action: 'click_login',
+                    category: 'Authentication',
+                    label: 'login',
+                  });
+                }}
+                disabled={!ready}
+                className="w-full  mx-auto bg-gradient-to-r from-emerald-500 to-sky-500 
+                         text-white font-medium py-3 px-6 rounded-xl
+                         hover:opacity-90 transition-all duration-300
+                         disabled:opacity-50 disabled:cursor-not-allowed
+                         shadow-lg shadow-emerald-500/20
+                         border border-white/10"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                {ready ? 'Connect Wallet' : 'Loading...'}
+              </motion.button>
+
+              <motion.button
+                onClick={() => {
+                  setShowAppStore(true);
+                  event({
+                    action: 'skip_login',
+                    category: 'Authentication',
+                    label: 'skip',
+                  });
+                }}
+                className="text-gray-400 hover:text-white transition-colors duration-300 text-sm"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Skip for now
+              </motion.button>
+            </div>
+
+            {/* Additional Info */}
+            <p className="text-gray-500 text-xs max-w-xs mx-auto">
+              By connecting, you agree to our Terms of Service and Privacy Policy
+            </p>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  // Original app store content
   return (
-    <div className="bg-black min-h-screen">
+    <div className="bg-black min-h-screen relative">
       <Head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -588,56 +734,80 @@ export default function AppStore({ timestamp, initialChain }) {
         </AnimatePresence>
       </div>
 
-      {/* Home button for chain pages */}
-      {/* {initialChain && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
-        >
-          <Link href="/">
-            <motion.div
-              className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden 
-                       border-2 border-white/10 hover:border-white/20 
-                       transition-all duration-300 shadow-lg backdrop-blur-sm
-                       bg-black/20"
-              whileHover={{ 
-                scale: 1.2,
-                rotate: [0, -10, 10, -10, 0],
-                transition: {
-                  rotate: {
-                    duration: 0.5,
-                    ease: "easeInOut"
-                  }
-                }
-              }}
-              whileTap={{ scale: 0.9 }}
-            >
-              <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-sky-500/20"
-                animate={{
-                  background: [
-                    "radial-gradient(circle at 0% 0%, rgba(16, 185, 129, 0.2) 0%, rgba(14, 165, 233, 0.2) 100%)",
-                    "radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.2) 0%, rgba(14, 165, 233, 0.2) 100%)"
-                  ]
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  repeatType: "reverse"
-                }}
-              />
-              <Image
-                src="/logodark.png"
-                alt="Poink"
-                fill
-                sizes="(max-width: 640px) 48px, 56px"
-                className="object-cover relative z-10"
-              />
-            </motion.div>
-          </Link>
-        </motion.div>
-      )} */}
+      {/* Floating Status Bar */}
+      <motion.div
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ type: "spring", bounce: 0.3 }}
+        className="fixed bottom-6 inset-x-0 mx-auto flex justify-center z-50"
+      >
+        <div className="bg-black/60 backdrop-blur-md border border-white/10 rounded-xl p-4 shadow-lg w-[320px]">
+          {authenticated && activeWallet ? (
+            <div className="flex flex-col space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-white/90 text-sm font-medium">
+                  {formatAddress(activeWallet.address)}
+                </span>
+              </div>
+              <motion.button
+                onClick={logout}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full text-red-400 hover:text-red-300 text-sm font-medium bg-red-500/10 hover:bg-red-500/20 px-4 py-1.5 rounded-lg transition-colors"
+              >
+                Logout
+              </motion.button>
+            </div>
+          ) : (
+            <div className="flex flex-col space-y-4">
+              <div className="flex flex-col space-y-3">
+                <motion.button
+                  onClick={() => {
+                    login();
+                    event({
+                      action: 'click_login',
+                      category: 'Authentication',
+                      label: 'login',
+                    });
+                  }}
+                  disabled={!ready}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full bg-gradient-to-r from-emerald-500 to-sky-500 text-white font-medium py-2 px-6 rounded-lg hover:opacity-90 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20 border border-white/10"
+                >
+                  {ready ? 'Connect Wallet' : 'Loading...'}
+                </motion.button>
+
+                <div className="relative w-full py-2">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-white/10"></div>
+                  </div>
+                  <div className="relative flex justify-center">
+                    <span className="px-2 text-xs text-white/30 bg-black/60">or continue without wallet</span>
+                  </div>
+                </div>
+
+                <motion.button
+                  onClick={() => {
+                    setShowAppStore(true);
+                    event({
+                      action: 'skip_login',
+                      category: 'Authentication',
+                      label: 'skip',
+                    });
+                  }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="text-gray-400 hover:text-white text-xs font-medium transition-colors"
+                >
+                  Skip for now
+                </motion.button>
+              </div>
+            </div>
+          )}
+        </div>
+      </motion.div>
 
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
