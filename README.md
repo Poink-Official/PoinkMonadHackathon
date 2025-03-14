@@ -1,4 +1,6 @@
-# Technical Architecture of the Poink Platform for Monad Ecosystem Integration
+# Technical Architecture of the Poinks
+
+You can find the complete source docs for the Poink project in our documentation: https://poinks-organization.gitbook.io/poink
 
 ## System Overview
 
